@@ -1,8 +1,8 @@
 ## Setup C for Visual Studio Code
  
-#### 1. Download and install Visual Studio Code from https://code.visualstudio.com/
+#### 1. [Download](https://code.visualstudio.com/) and install Visual Studio Code
  
-#### 2. Download and install MinGW from http://www.mingw.org/ ([Video](https://youtu.be/guM4XS43m4I))  
+#### 2. [Download](http://www.mingw.org/) and install MinGW ([Video](https://youtu.be/guM4XS43m4I))  
   You will need the following packages:
   - mingw32-base-bin (A Basic MinGW Installation)
   - mingw32-gcc-g++-bin (The GNU C++ Compiler)
