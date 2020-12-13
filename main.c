@@ -1,10 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
-#include <unistd.h> //access()
-
-// #pragma execution_character_set("utf-8")
-
+#include <unistd.h> // access()
+#include <ctype.h> // iscntrl() isspace()
 typedef struct
 {
   int from;
@@ -23,7 +21,6 @@ typedef struct
 {
   char key;
   char *description;
-  void (*fun_ptr)();
 } Menu;
 
 DistanceTable loadData()
@@ -31,21 +28,21 @@ DistanceTable loadData()
   DistanceTable distanceTable = {
       .n = 0};
 
-  printf("Wie heißt die Datei, in der die Daten gespeichert wurden?\n");
+  printf("Please enter the name of the file which should be loaded.\033[34m\n");
   char path[100];
   scanf("%99s", &path[0]);
-  printf("\n");
+  printf("\033[0m\n");
 
   FILE *fpointer = fopen(path, "r");
   if (fpointer == NULL)
   {
     if (access(path, F_OK) == 0)
     {
-      printf("Error loading data: file is blocked by a program");
+      printf("\033[31mError loading data: File is blocked by a program.\033[0m");
     }
     else
     {
-      printf("Error loading data: file not found");
+      printf("\033[31mError loading data: File not found.\033[0m");
     }
     return distanceTable;
   }
@@ -67,8 +64,8 @@ DistanceTable loadData()
           tmpCities = realloc(distanceTable.cities, (distanceTable.n + memcycle) * sizeof(char *));
           if (tmpCities == NULL)
           {
-            printf("Error: Out of memory");
-            exit(1);
+            printf("\033[31mError: Out of memory.\033[0m");
+            return distanceTable;
           }
           else
           {
@@ -76,7 +73,7 @@ DistanceTable loadData()
           }
         }
 
-        distanceTable.cities[distanceTable.n] = malloc((strlen(city) + 1) * sizeof(char)); // TODO maybe use calloc instead
+        distanceTable.cities[distanceTable.n] = calloc(strlen(city) + 1, sizeof(char));
 
         strcpy(distanceTable.cities[distanceTable.n], city);
 
@@ -84,7 +81,7 @@ DistanceTable loadData()
         distanceTable.n++;
       }
 
-      distanceTable.distances = malloc(distanceTable.n * distanceTable.n * sizeof(Distance));
+      distanceTable.distances = calloc(distanceTable.n * distanceTable.n, sizeof(Distance));
       for (int i = 0; i < distanceTable.n; i++)
       {
         read = getline(&line, &len, fpointer);
@@ -99,7 +96,7 @@ DistanceTable loadData()
             {
               if (dist != 0)
               {
-                printf("Error reading from file: Expected '0', got '%s' in line %u word %u", distString, i + 2, j + 1);
+                printf("\033[31mError reading from file: Expected '0', got '%s' in line %u word %u.\033[0m", distString, i + 2, j + 1);
                 i = j = distanceTable.n;
               }
               else
@@ -123,7 +120,7 @@ DistanceTable loadData()
               }
               else
               {
-                printf("Error reading from file: Expected number greater than 0, got '%s' in line %u word %u", distString, i + 2, j + 1);
+                printf("\033[31mError reading from file: Expected number greater than 0, got '%s' in line %u word %u.", distString, i + 2, j + 1);
                 i = j = distanceTable.n;
               }
             }
@@ -132,7 +129,7 @@ DistanceTable loadData()
         }
         else
         {
-          printf("Error reading from file: Line %u is empty\n", i);
+          printf("\033[31mError reading from file: Line %u is empty.\033[0m\n", i);
           i = distanceTable.n;
         }
       }
@@ -143,7 +140,7 @@ DistanceTable loadData()
     {
       free(line);
     }
-    printf("\x1B[32mDie Entfernungstabelle wurde erfolgreich eingelesen (%s).\x1B[0m\n", path);
+    printf("\033[32mThe distance table was loaded successfully. (%s)\033[0m\n", path);
     return distanceTable;
   }
 }
@@ -164,7 +161,7 @@ void showData(DistanceTable distanceTable) //TODO Print if there are unsaved cha
   }
   else
   {
-    printf("Die Entfernungstabelle ist leer\n");
+    printf("The distance table is empty.\n");
   }
 }
 
@@ -196,7 +193,6 @@ int main()
 {
   SetConsoleOutputCP(65001); // utf-8
 
-  printf("--main\n");
   DistanceTable distanceTable = {
       .n = 0};
 
@@ -214,11 +210,12 @@ int main()
   do
   {
     printMenu(startMenu, startMenuLength);
+    printf("\033[34m");
     do
     {
       c = getchar();
-    } while (c == '\n');
-    printf("\n");
+    } while (isspace(c) || iscntrl(c));
+    printf("\033[0m\n");
     switch (c)
     {
     case 'a':
@@ -240,7 +237,7 @@ int main()
       exitProgram();
       break;
     default:
-      printf("'%c' is not valid input", c);
+      printf("\033[31m'%c' is not a valid input.\033[0m", c);
     }
   } while (c != 'f');
   return 0;
