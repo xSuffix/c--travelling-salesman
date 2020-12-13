@@ -1,36 +1,53 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
+#include <unistd.h> //access()
 
 // #pragma execution_character_set("utf-8")
 
-void loadData() // TODO Rückgabewert soll Pointer sein
+typedef struct
 {
-  typedef struct
-  {
-    int from;
-    int to;
-    int dist;
-  } Distance;
+  int from;
+  int to;
+  int dist;
+} Distance;
 
-  typedef struct
-  {
-    int n;
-    char **cities;
-    Distance *distances;
-  } DistanceTable;
+typedef struct
+{
+  int n;
+  char **cities;
+  Distance *distances;
+} DistanceTable;
 
+typedef struct
+{
+  char key;
+  char *description;
+  void (*fun_ptr)();
+} Menu;
+
+DistanceTable loadData()
+{
   DistanceTable distanceTable = {
-      .n = 0
-  };
+      .n = 0};
 
-  printf("Wie heißt die Datei, in der die Daten gespeichert wurden? (Bei leerer Eingabe wird DistanceTable.txt verwendet.)\n");
-  // TODO Nutzereingabe
-  FILE *fpointer = fopen("DistanceTable.txt", "r");
+  printf("Wie heißt die Datei, in der die Daten gespeichert wurden?\n");
+  char path[100];
+  scanf("%99s", &path[0]);
+  printf("\n");
+
+  FILE *fpointer = fopen(path, "r");
   if (fpointer == NULL)
   {
-    printf("Error opening file");
-    exit(1); // TODO Funktionalität prüfen
+    if (access(path, F_OK) == 0)
+    {
+      printf("Error loading data: file is blocked by a program");
+    }
+    else
+    {
+      printf("Error loading data: file not found");
+    }
+    return distanceTable;
   }
   else
   {
@@ -49,8 +66,9 @@ void loadData() // TODO Rückgabewert soll Pointer sein
           char **tmpCities;
           tmpCities = realloc(distanceTable.cities, (distanceTable.n + memcycle) * sizeof(char *));
           if (tmpCities == NULL)
-          { // TODO handle failed realloc
-            printf("error");
+          {
+            printf("Error: Out of memory");
+            exit(1);
           }
           else
           {
@@ -86,7 +104,6 @@ void loadData() // TODO Rückgabewert soll Pointer sein
               }
               else
               {
-                // TODO Distance struct
                 Distance distance = {
                     .from = i,
                     .to = j,
@@ -121,17 +138,13 @@ void loadData() // TODO Rückgabewert soll Pointer sein
       }
     }
 
-    for (int k = 0; k < distanceTable.n * distanceTable.n; k++)
-    { // TODO In showData() auslagern und evtl. überarbeiten
-      Distance d = distanceTable.distances[k];
-      printf("\n[%2d] - from: %d | to: %d | dist: %3d", k, d.from, d.to, d.dist);
-    }
-
     fclose(fpointer);
     if (line)
     {
       free(line);
     }
+    printf("\x1B[32mDie Entfernungstabelle wurde erfolgreich eingelesen (%s).\x1B[0m\n", path);
+    return distanceTable;
   }
 }
 
@@ -140,9 +153,19 @@ void saveData()
   printf("save");
 }
 
-void showData()
+void showData(DistanceTable distanceTable) //TODO Print if there are unsaved changes
 {
-  printf("show");
+  if (distanceTable.n)
+  {
+    for (int i = 0; i < distanceTable.n * distanceTable.n; i++)
+    {
+      printf("[%2d] - from: %d | to: %d | dist: %3d\n", i, distanceTable.distances[i].from, distanceTable.distances[i].to, distanceTable.distances[i].dist);
+    }
+  }
+  else
+  {
+    printf("Die Entfernungstabelle ist leer\n");
+  }
 }
 
 void changeDistanceBetweenCities()
@@ -160,43 +183,65 @@ void exitProgram()
   printf("exit");
 }
 
-typedef struct
+void printMenu(Menu *menu, int length)
 {
-  char key;
-  char *description;
-  void (*fun_ptr)();
-} Menu;
-
-Menu startMenu[] = {
-    {'a', "Entfernungstabelle laden", &loadData},
-    {'b', "Entfernungstabelle speichern", &saveData},
-    {'c', "Entfernungstabelle anzeigen", &showData},
-    {'d', "Entfernung zwischen zwei Städten ändern", &changeDistanceBetweenCities},
-    {'e', "Kürzeste Route berechnen", &calculateShortestRoute},
-    {'f', "Programm beenden", &exitProgram},
-};
+  printf("\n");
+  for (int i = 0; i < length; i++)
+  {
+    printf("(%c) %s\n", menu[i].key, menu[i].description);
+  }
+}
 
 int main()
 {
   SetConsoleOutputCP(65001); // utf-8
 
-  int startMenuLength = sizeof(startMenu) / sizeof startMenu[0];
-  for (int i = 0; i < startMenuLength; i++)
-  {
-    printf("(%c) %s\n", startMenu[i].key, startMenu[i].description);
-  }
+  printf("--main\n");
+  DistanceTable distanceTable = {
+      .n = 0};
+
+  Menu startMenu[] = {
+      {'a', "Entfernungstabelle laden"},
+      {'b', "Entfernungstabelle speichern"},
+      {'c', "Entfernungstabelle anzeigen"},
+      {'d', "Entfernung zwischen zwei Städten ändern"},
+      {'e', "Kürzeste Route berechnen"},
+      {'f', "Programm beenden"},
+  };
+  int startMenuLength = sizeof(startMenu) / sizeof(startMenu[0]);
 
   char c;
-  scanf("%c", &c);
-  printf("\n");
-
-  for (int i = 0; i < startMenuLength; i++)
+  do
   {
-    if (c == startMenu[i].key)
+    printMenu(startMenu, startMenuLength);
+    do
     {
-      startMenu[i].fun_ptr();
+      c = getchar();
+    } while (c == '\n');
+    printf("\n");
+    switch (c)
+    {
+    case 'a':
+      distanceTable = loadData();
+      break;
+    case 'b':
+      saveData();
+      break;
+    case 'c':
+      showData(distanceTable);
+      break;
+    case 'd':
+      changeDistanceBetweenCities();
+      break;
+    case 'e':
+      calculateShortestRoute();
+      break;
+    case 'f':
+      exitProgram();
+      break;
+    default:
+      printf("'%c' is not valid input", c);
     }
-  }
-
+  } while (c != 'f');
   return 0;
 }
