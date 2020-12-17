@@ -47,7 +47,7 @@ void setConsoleColor(int color)
 #ifdef _WIN32
   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 #else
-  printf("033[%dm", color);
+  printf("\033[%dm", color);
 #endif
 }
 
