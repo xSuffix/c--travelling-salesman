@@ -17,4 +17,6 @@
  
 #### 5. Adjust preferences for Code Runner ([Video](https://youtu.be/77v-Poud_io?t=349))
 - File -> Preferences -> Settings
-- Search for "code runner: run in terminal" and make sure it's checked.
+- Search for "Code runner: Run In Terminal" and make sure it's checked.
+- Search for "Code runner: Executor Map" and change the command for c code to include -Wall -pedantic-errors:
+`"c": "cd $dir && gcc $fileName -Wall -pedantic-errors -o $fileNameWithoutExt && $dir$fileNameWithoutExt",`
