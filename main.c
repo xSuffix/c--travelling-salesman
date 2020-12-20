@@ -53,9 +53,6 @@ void setConsoleColor(int color)
 
 DistanceTable loadData()
 {
-    if(1) {
-
-    }
   DistanceTable distanceTable = {
       .n = 0};
 
@@ -75,24 +72,24 @@ DistanceTable loadData()
   FILE *fpointer = fopen(path, "r");
   if (fpointer == NULL)
   {
-        if (access(path , F_OK) == 0)
-        {
+    if (access(path, F_OK) == 0)
+    {
       setConsoleColor(COLOR_ERROR);
       printf("Error loading data: File is blocked by a program.\n");
     }
     else
     {
-              setConsoleColor(COLOR_ERROR);
-              printf("Error loading data: File not found.\n");
-            }
+      setConsoleColor(COLOR_ERROR);
+      printf("Error loading data: File not found.\n");
+    }
     distanceTable.n = -1;
     return distanceTable;
   }
   else
   {
     ssize_t read;
-                              char *line = NULL;
-                size_t len = 10;
+    char *line = NULL;
+    size_t len = 10;
     int memcycle = 4;
 
     if ((read = getline(&line, &len, fpointer)) != -1)
@@ -103,35 +100,32 @@ DistanceTable loadData()
         if (distanceTable.n % memcycle == 0)
         { // Allocate memory every (memcycle)th step/word
           char **tmpCities;
-               tmpCities = realloc(distanceTable.cities, (distanceTable.n + memcycle) * sizeof(char *));
+          tmpCities = realloc(distanceTable.cities, (distanceTable.n + memcycle) * sizeof(char *));
           if (tmpCities == NULL)
           {
             setConsoleColor(COLOR_ERROR);
             printf("Error: Out of memory.\n");
-                   distanceTable.n = -1;
+            distanceTable.n = -1;
             return distanceTable;
-                                }
+          }
           else
-                  {
-                    distanceTable.cities = tmpCities;
+          {
+            distanceTable.cities = tmpCities;
           }
         }
 
         distanceTable.cities[distanceTable.n] = calloc(strlen(city) + 1, sizeof(char));
 
-            strcpy(distanceTable.ci ties[distanceTable.n], city);
+        strcpy(distanceTable.cities[distanceTable.n], city);
 
         city = strtok(NULL, "\n ");
         distanceTable.n++;
       }
 
-          distanceTable.distances = calloc
-                  (
-                          distanceTable
-                          .n * distanceTable.n, sizeof(Distance));
-          for (int i = 0; i < distanceTable.n; i++)
-              {
-                read = getline(&line, &len, fpointer);
+      distanceTable.distances = calloc(distanceTable.n * distanceTable.n, sizeof(Distance));
+      for (int i = 0; i < distanceTable.n; i++)
+      {
+        read = getline(&line, &len, fpointer);
         if (read > 0)
         {
           char *distString = strtok(line, " \n");
