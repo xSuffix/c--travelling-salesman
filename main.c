@@ -1,8 +1,16 @@
+// Kurs INF20A
+// Bearbeiter: Jan Fröhlich, Gabriel Nill, Fabian Weller
+
+//TODO: Discuss whether we should switch to German output because the menu itself has to be German.
+
 #include <ctype.h> // iscntrl() isspace() Funktionen für ASCII-Zeichen
 #include <stdio.h> // Ein- und Ausgabefunktionen
 #include <stdlib.h> // Stringkonvertierung, Zufallszahlen, Speicherallokation, Sortieren u.a.
 #include <string.h> // prototype for strtok() because gcc expects int as return type
 #include <unistd.h> // access(), maybe not needed
+#include <stdbool.h>
+#include <limits.h>
+
 
 #ifdef _WIN32
 #include <windows.h>
@@ -177,7 +185,120 @@ void showData(
   }
 }
 
-void changeDistanceBetweenCities() { printf("change distance"); }
+int getCityNumber(DistanceTable *distanceTable, char city[100]) {
+    for (int i = 0; i < distanceTable->n; i++) {
+        if (strcmp(distanceTable->cities[i], city) == 0) {
+            return i;
+        }
+    }
+    return -1;  // City was not found
+}
+
+Distance *getDistanceStructBetweenCities(DistanceTable *distanceTable, int from, int to) {
+    for (int i = 0; i < distanceTable->n * distanceTable->n - 1; i++) {
+        if (from == distanceTable->distances[i].from && to == distanceTable->distances[i].to)
+            return &distanceTable->distances[i];
+    }
+
+    return 0;
+}
+
+
+// TODO Error in reading complete file? Last city isn't resolved. Is my code wrong?
+void changeDistanceBetweenCities(DistanceTable *distanceTable) {
+    if (distanceTable->n == 0) {
+        setConsoleColor(COLOR_ERROR);
+        printf("Please load a distance table first.\n");
+        return;
+    }
+
+    setConsoleColor(COLOR_DEFAULT);
+    printf("Please enter the name of the first city:\n");
+    char firstCity[100];
+    scanf("%s", firstCity);
+
+    int firstCityNumber = getCityNumber(distanceTable, firstCity);
+    if (firstCityNumber == -1) {
+        setConsoleColor(COLOR_ERROR);
+        printf("This city doesn't exist.\n");
+        return;
+    }
+
+    printf("\n");
+
+    printf("Please enter the name of the second city:\n");
+    char secondCity[100];
+    scanf("%s", secondCity);
+
+    int secondCityNumber = getCityNumber(distanceTable, secondCity);
+    if (secondCityNumber == -1) {
+        setConsoleColor(COLOR_ERROR);
+        printf("This city doesn't exist.\n");
+        return;
+    }
+
+    printf("\n");
+
+    Distance *firstToSecond = getDistanceStructBetweenCities(distanceTable, firstCityNumber, secondCityNumber);
+    Distance *secondToFirst = getDistanceStructBetweenCities(distanceTable, secondCityNumber, firstCityNumber);
+    printf("Current distances:\n");
+    printf("%s to %s: %d\n", firstCity, secondCity, firstToSecond->dist);
+    printf("%s to %s: %d\n", secondCity, firstCity, secondToFirst->dist);
+    printf("\n");
+
+    bool invalid;
+    int firstDist;
+    int secondDist;
+    char input[100];
+    // TODO Maybe put into a helper method
+
+    do {
+        invalid = false;
+        printf("Please input a new distance for %s to %s\n", firstCity, secondCity);
+        scanf("%s", input);
+        long int newDistance = strtol(input, NULL, 10);
+
+        // Check for validity
+        if (newDistance < 0) {
+            printf("The distance must be positiv.\n");
+            invalid = true;
+        }
+        else if (newDistance > INT_MAX) {
+            printf("The number is too big.\n");
+            invalid = true;
+        } else {
+            firstDist = (int) newDistance;
+        }
+    } while (invalid);
+
+
+
+    do {
+        invalid = false;
+        printf("Please input a new distance for %s to %s\n", secondCity, firstCity);
+        scanf("%s", input);
+        long int newDistance = strtol(input, NULL, 10);
+
+        // Check for validity
+        if (newDistance < 0) {
+            printf("The distance must be positiv.\n");
+            invalid = true;
+        }
+        else if (newDistance > INT_MAX) {
+            printf("The number is too big.\n");
+            invalid = true;
+        } else {
+            secondDist = (int) newDistance;
+        }
+    } while (invalid);
+
+    // Replace distances
+    firstToSecond->dist = firstDist;
+    secondToFirst->dist = secondDist;
+
+    printf("Success!");
+
+}
 
 void calculateShortestRoute() { printf("calculate"); }
 
@@ -236,7 +357,7 @@ int main() {
       showData(distanceTable);
       break;
     case 'd':
-      changeDistanceBetweenCities();
+      changeDistanceBetweenCities(&distanceTable);
       break;
     case 'e':
       calculateShortestRoute();
