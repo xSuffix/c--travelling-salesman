@@ -4,13 +4,13 @@
 // TODO: Discuss whether we should switch to German output because the menu
 // itself has to be German.
 
-#include <ctype.h>  // iscntrl() isspace() Funktionen für ASCII-Zeichen
+#include <ctype.h> // iscntrl() isspace() Funktionen für ASCII-Zeichen
 #include <limits.h>
 #include <stdbool.h>
-#include <stdio.h>   // Ein- und Ausgabefunktionen
-#include <stdlib.h>  // Stringkonvertierung, Zufallszahlen, Speicherallokation, Sortieren u.a.
-#include <string.h>  // prototype for strtok() because gcc expects int as return type
-#include <unistd.h>  // access(), maybe not needed
+#include <stdio.h> // Ein- und Ausgabefunktionen
+#include <stdlib.h> // Stringkonvertierung, Zufallszahlen, Speicherallokation, Sortieren u.a.
+#include <string.h> // prototype for strtok() because gcc expects int as return type
+#include <unistd.h> // access(), maybe not needed
 
 #ifdef _WIN32
 #include <windows.h>
@@ -57,8 +57,10 @@ void setConsoleColor(int color) {
 
 // Return amount of digits in integer (0 => 1, 53 => 2, 1234 => 4)
 int intDigits(int n) {
-  if (n < 0) return intDigits(-n);
-  if (n < 10) return 1;
+  if (n < 0)
+    return intDigits(-n);
+  if (n < 10)
+    return 1;
   return 1 + intDigits(n / 10);
 }
 
@@ -66,18 +68,21 @@ int intDigits(int n) {
 int strlen_utf8(char *s) {
   int i = 0, j = 0;
   while (s[i]) {
-    if ((s[i] & 0xc0) != 0x80) j++;
+    if ((s[i] & 0xc0) != 0x80)
+      j++;
     i++;
   }
   return j;
 }
 
 // Norms a string to a specific minimum/maximum length with support for unicode.
-// If string is smaller than minimum, it will fill the rest with the filler char. If larger, it will crop.
+// If string is smaller than minimum, it will fill the rest with the filler
+// char. If larger, it will crop.
 char *substr_utf8(const char *src, size_t min, size_t max, char filler) {
   size_t i = 0, j = 0;
   while (j < max && src[i]) {
-    if ((src[i] & 0xc0) != 0x80) j++;
+    if ((src[i] & 0xc0) != 0x80)
+      j++;
     i++;
   }
 
@@ -126,12 +131,12 @@ DistanceTable loadData() {
     int memcycle = 4;
 
     if ((read = getline(&line, &len, fpointer)) !=
-        -1)  // TODO look how this works
+        -1) // TODO look how this works
     {
       char *city = strtok(line, "\n ");
       while (city != NULL) {
         if (distanceTable.n % memcycle ==
-            0) {  // Allocate memory every (memcycle)th step/word
+            0) { // Allocate memory every (memcycle)th step/word
           char **tmpCities;
           tmpCities = realloc(distanceTable.cities,
                               (distanceTable.n + memcycle) * sizeof(char *));
@@ -154,7 +159,8 @@ DistanceTable loadData() {
         distanceTable.n++;
       }
 
-      distanceTable.distances = calloc(distanceTable.n * distanceTable.n, sizeof(Distance));
+      distanceTable.distances =
+          calloc(distanceTable.n * distanceTable.n, sizeof(Distance));
       for (int i = 0; i < distanceTable.n; i++) {
         read = getline(&line, &len, fpointer);
         if (read > 0) {
@@ -162,13 +168,12 @@ DistanceTable loadData() {
           for (int j = 0; j < distanceTable.n; j++) {
             long dist = strtol(distString, NULL, 0);
 
-            if (i == j) {  // start city == destination
+            if (i == j) { // start city == destination
               if (dist != 0) {
                 setConsoleColor(COLOR_ERROR);
-                printf(
-                    "Error reading from file: Expected '0', got '%s' in "
-                    "line %u word %u.\n",
-                    distString, i + 2, j + 1);
+                printf("Error reading from file: Expected '0', got '%s' in "
+                       "line %u word %u.\n",
+                       distString, i + 2, j + 1);
                 i = j = distanceTable.n;
               } else {
                 Distance distance = {.from = i, .to = j, .dist = dist};
@@ -180,11 +185,10 @@ DistanceTable loadData() {
                 distanceTable.distances[i * distanceTable.n + j] = distance;
               } else {
                 setConsoleColor(COLOR_ERROR);
-                printf(
-                    "Error reading from file: Expected number greater than "
-                    "0, got '%s' in line %u "
-                    "word %u.\n",
-                    distString, i + 2, j + 1);
+                printf("Error reading from file: Expected number greater than "
+                       "0, got '%s' in line %u "
+                       "word %u.\n",
+                       distString, i + 2, j + 1);
                 i = j = distanceTable.n;
               }
             }
@@ -210,7 +214,8 @@ DistanceTable loadData() {
 
 void saveData() { printf("save"); }
 
-void showData(DistanceTable distanceTable)  // TODO Print if there are unsaved changes
+void showData(
+    DistanceTable distanceTable) // TODO Print if there are unsaved changes
 {
   // Check if there is any data to display
   if (distanceTable.n > 0) {
@@ -238,7 +243,7 @@ void showData(DistanceTable distanceTable)  // TODO Print if there are unsaved c
     }
 
     // Print title row
-    printf("%*s", largestCityNameLength + 1, "");  // Margin for the first line
+    printf("%*s", largestCityNameLength + 1, ""); // Margin for the first line
     setConsoleColor(COLOR_INFO);
     for (int i = 0; i < distanceTable.n; i++) {
       // Print titles of columns
@@ -273,7 +278,7 @@ int getCityNumber(DistanceTable *distanceTable, char city[100]) {
       return i;
     }
   }
-  return -1;  // City was not found
+  return -1; // City was not found
 }
 
 Distance *getDistanceStructBetweenCities(DistanceTable *distanceTable, int from,
@@ -425,32 +430,32 @@ int main() {
     printf("\n");
 
     switch (c) {
-      case 'a':
-        tmpDistanceTable = loadData();
-        if (tmpDistanceTable.n >= 0) {
-          distanceTable = tmpDistanceTable;
-        }
-        break;
-      case 'b':
-        saveData();
-        break;
-      case 'c':
-        showData(distanceTable);
-        break;
-      case 'd':
-        changeDistanceBetweenCities(&distanceTable);
-        break;
-      case 'e':
-        calculateShortestRoute();
-        break;
-      case 'f':
-        exitProgram();
-        break;
-      case -1:
-        break;
-      default:
-        setConsoleColor(COLOR_ERROR);
-        printf("'%c' is not a valid input.\n", c);
+    case 'a':
+      tmpDistanceTable = loadData();
+      if (tmpDistanceTable.n >= 0) {
+        distanceTable = tmpDistanceTable;
+      }
+      break;
+    case 'b':
+      saveData();
+      break;
+    case 'c':
+      showData(distanceTable);
+      break;
+    case 'd':
+      changeDistanceBetweenCities(&distanceTable);
+      break;
+    case 'e':
+      calculateShortestRoute();
+      break;
+    case 'f':
+      exitProgram();
+      break;
+    case -1:
+      break;
+    default:
+      setConsoleColor(COLOR_ERROR);
+      printf("'%c' is not a valid input.\n", c);
     }
   } while (c != 'f');
   return 0;
