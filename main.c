@@ -55,8 +55,7 @@ void setConsoleColor(int color) {
 #endif
 }
 
-int intDigits(int n)
-{
+int intDigits(int n) {
   if (n < 0)
     return intDigits(-n);
   if (n < 10)
@@ -64,11 +63,9 @@ int intDigits(int n)
   return 1 + intDigits(n / 10);
 }
 
-int strlen_utf8(char *s)
-{
+int strlen_utf8(char *s) {
   int i = 0, j = 0;
-  while (s[i])
-  {
+  while (s[i]) {
     if ((s[i] & 0xc0) != 0x80)
       j++;
     i++;
@@ -76,11 +73,9 @@ int strlen_utf8(char *s)
   return j;
 }
 
-char *substr_utf8(const char *src, size_t min, size_t max, char filler)
-{
+char *substr_utf8(const char *src, size_t min, size_t max, char filler) {
   size_t i = 0, j = 0;
-  while (j < max && src[i])
-  {
+  while (j < max && src[i]) {
     if ((src[i] & 0xc0) != 0x80)
       j++;
     i++;
@@ -91,17 +86,14 @@ char *substr_utf8(const char *src, size_t min, size_t max, char filler)
   memcpy(substr, &src[0], i);
   substr[i] = '\0';
 
-  for (int k = 0; min > k + j; k++)
-  {
+  for (int k = 0; min > k + j; k++) {
     strncat(substr, &filler, 1);
   }
   return substr;
 }
 
-DistanceTable loadData()
-{
-  DistanceTable distanceTable = {
-      .n = 0};
+DistanceTable loadData() {
+  DistanceTable distanceTable = {.n = 0};
 
   setConsoleColor(COLOR_DEFAULT);
   printf("Please enter the name of the file which should be loaded.\n");
@@ -132,7 +124,8 @@ DistanceTable loadData()
     size_t len = 10;
     int memcycle = 4;
 
-    if ((read = getline(&line, &len, fpointer)) != -1) //TODO look how this works
+    if ((read = getline(&line, &len, fpointer)) !=
+        -1) // TODO look how this works
     {
       char *city = strtok(line, "\n ");
       while (city != NULL) {
@@ -220,8 +213,7 @@ void showData(
     DistanceTable distanceTable) // TODO Print if there are unsaved changes
 {
   // Check if there is any data to display
-  if (distanceTable.n > 0)
-  {
+  if (distanceTable.n > 0) {
     int largestCityNameLength = 0;
 
     // Initialize length of column (in chars) with minimum value of 3
@@ -231,15 +223,13 @@ void showData(
       columnLengths[i] = 3;
     }
 
-    for (int i = 0; i < distanceTable.n; i++)
-    {
+    for (int i = 0; i < distanceTable.n; i++) {
       // Find out how many characters the longest city name has
       int cityNameLength = strlen_utf8(distanceTable.cities[i]);
       if (cityNameLength > largestCityNameLength)
         largestCityNameLength = cityNameLength;
 
-      for (int j = 0; j < distanceTable.n; j++)
-      {
+      for (int j = 0; j < distanceTable.n; j++) {
         // Find out how many digits the largest distance has
         int distanceLength = intDigits(distanceTable.distances[i * 5 + j].dist);
         if (distanceLength > columnLengths[j])
@@ -250,24 +240,25 @@ void showData(
     // Print title row
     printf("%*s", largestCityNameLength + 1, ""); // Margin for the first line
     setConsoleColor(COLOR_INFO);
-    for (int i = 0; i < distanceTable.n; i++)
-    {
+    for (int i = 0; i < distanceTable.n; i++) {
       // Print titles of columns
-      printf("%s ", substr_utf8(distanceTable.cities[i], columnLengths[i], columnLengths[i], ' '));
+      printf("%s ", substr_utf8(distanceTable.cities[i], columnLengths[i],
+                                columnLengths[i], ' '));
     }
     printf("\n");
 
     // Print rows except for title row
-    for (int i = 0; i < distanceTable.n; i++)
-    {
+    for (int i = 0; i < distanceTable.n; i++) {
       setConsoleColor(COLOR_INFO);
-      // Print titles of rows with margin, so that the entire row has the same width
-      printf("%s ", substr_utf8(distanceTable.cities[i], largestCityNameLength, largestCityNameLength, ' '));
+      // Print titles of rows with margin, so that the entire row has the same
+      // width
+      printf("%s ", substr_utf8(distanceTable.cities[i], largestCityNameLength,
+                                largestCityNameLength, ' '));
       setConsoleColor(COLOR_DEFAULT);
-      for (int j = 0; j < distanceTable.n; j++)
-      {
+      for (int j = 0; j < distanceTable.n; j++) {
         // Print digits (distances)
-        printf("%*d ", columnLengths[j], distanceTable.distances[i * 5 + j].dist);
+        printf("%*d ", columnLengths[j],
+               distanceTable.distances[i * 5 + j].dist);
       }
       printf("\n");
     }
@@ -436,8 +427,7 @@ int main() {
     switch (c) {
     case 'a':
       tmpDistanceTable = loadData();
-      if (tmpDistanceTable.n >= 0)
-      {
+      if (tmpDistanceTable.n >= 0) {
         distanceTable = tmpDistanceTable;
       }
       break;
