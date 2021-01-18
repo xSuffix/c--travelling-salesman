@@ -51,6 +51,49 @@ void setConsoleColor(int color)
 #endif
 }
 
+int intDigits(int n)
+{
+  if (n < 0)
+    return intDigits(-n);
+  if (n < 10)
+    return 1;
+  return 1 + intDigits(n / 10);
+}
+
+int strlen_utf8(char *s)
+{
+  int i = 0, j = 0;
+  while (s[i])
+  {
+    if ((s[i] & 0xc0) != 0x80)
+      j++;
+    i++;
+  }
+  return j;
+}
+
+char *substr_utf8(const char *src, size_t min, size_t max, char filler)
+{
+  size_t i = 0, j = 0;
+  while (j < max && src[i])
+  {
+    if ((src[i] & 0xc0) != 0x80)
+      j++;
+    i++;
+  }
+
+  char *substr = "";
+  substr = calloc((i > min ? i : min) + 1, sizeof(char));
+  memcpy(substr, &src[0], i);
+  substr[i] = '\0';
+
+  for (int k = 0; min > k + j; k++)
+  {
+    strncat(substr, &filler, 1);
+  }
+  return substr;
+}
+
 DistanceTable loadData()
 {
   DistanceTable distanceTable = {
@@ -92,7 +135,7 @@ DistanceTable loadData()
     size_t len = 10;
     int memcycle = 4;
 
-    if ((read = getline(&line, &len, fpointer)) != -1)
+    if ((read = getline(&line, &len, fpointer)) != -1) //TODO look how this works
     {
       char *city = strtok(line, "\n ");
       while (city != NULL)
@@ -197,12 +240,57 @@ void saveData()
 
 void showData(DistanceTable distanceTable) //TODO Print if there are unsaved changes
 {
-  if (distanceTable.n)
+  // Check if there is any data to display
+  if (distanceTable.n > 0)
   {
-    setConsoleColor(COLOR_INFO);
-    for (int i = 0; i < distanceTable.n * distanceTable.n; i++)
+    int largestCityNameLength = 0;
+
+    // Initialize length of column (in chars) with minimum value of 3
+    int *columnLengths;
+    columnLengths = calloc(distanceTable.n, sizeof(int));
+    for (int i = 0; i < distanceTable.n; i++) {
+      columnLengths[i] = 3;
+    }
+
+    for (int i = 0; i < distanceTable.n; i++)
     {
-      printf("[%2d] - from: %d | to: %d | dist: %3d\n", i, distanceTable.distances[i].from, distanceTable.distances[i].to, distanceTable.distances[i].dist);
+      // Find out how many characters the longest city name has
+      int cityNameLength = strlen_utf8(distanceTable.cities[i]);
+      if (cityNameLength > largestCityNameLength)
+        largestCityNameLength = cityNameLength;
+
+      for (int j = 0; j < distanceTable.n; j++)
+      {
+        // Find out how many digits the largest distance has
+        int distanceLength = intDigits(distanceTable.distances[i * 5 + j].dist);
+        if (distanceLength > columnLengths[j])
+          columnLengths[j] = distanceLength;
+      }
+    }
+
+    // Print title row
+    printf("%*s", largestCityNameLength + 1, ""); // Margin for the first line
+    setConsoleColor(COLOR_INFO);
+    for (int i = 0; i < distanceTable.n; i++)
+    {
+      // Print titles of columns
+      printf("%s ", substr_utf8(distanceTable.cities[i], columnLengths[i], columnLengths[i], ' '));
+    }
+    printf("\n");
+
+    // Print rows except for title row
+    for (int i = 0; i < distanceTable.n; i++)
+    {
+      setConsoleColor(COLOR_INFO);
+      // Print titles of rows with margin, so that the entire row has the same width
+      printf("%s ", substr_utf8(distanceTable.cities[i], largestCityNameLength, largestCityNameLength, ' '));
+      setConsoleColor(COLOR_DEFAULT);
+      for (int j = 0; j < distanceTable.n; j++)
+      {
+        // Print digits (distances)
+        printf("%*d ", columnLengths[j], distanceTable.distances[i * 5 + j].dist);
+      }
+      printf("\n");
     }
   }
   else
@@ -274,7 +362,8 @@ int main()
     {
     case 'a':
       tmpDistanceTable = loadData();
-      if (tmpDistanceTable.n >= 0) {
+      if (tmpDistanceTable.n >= 0)
+      {
         distanceTable = tmpDistanceTable;
       }
       break;
@@ -297,7 +386,7 @@ int main()
       break;
     default:
       setConsoleColor(COLOR_ERROR);
-      printf("'%d' is not a valid input.\n", c);
+      printf("'%c' is not a valid input.\n", c);
     }
   } while (c != 'f');
   return 0;
