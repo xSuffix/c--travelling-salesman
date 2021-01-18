@@ -1,8 +1,16 @@
-#include <stdio.h>  // Ein- und Ausgabefunktionen
+// Kurs INF20A
+// Bearbeiter: Jan Fröhlich, Gabriel Nill, Fabian Weller
+
+// TODO: Discuss whether we should switch to German output because the menu
+// itself has to be German.
+
+#include <ctype.h> // iscntrl() isspace() Funktionen für ASCII-Zeichen
+#include <limits.h>
+#include <stdbool.h>
+#include <stdio.h> // Ein- und Ausgabefunktionen
 #include <stdlib.h> // Stringkonvertierung, Zufallszahlen, Speicherallokation, Sortieren u.a.
 #include <string.h> // prototype for strtok() because gcc expects int as return type
 #include <unistd.h> // access(), maybe not needed
-#include <ctype.h>  // iscntrl() isspace() Funktionen für ASCII-Zeichen
 
 #ifdef _WIN32
 #include <windows.h>
@@ -22,28 +30,24 @@
 #define COLOR_DEFAULT 0
 #endif
 
-typedef struct
-{
+typedef struct {
   int from;
   int to;
   int dist;
 } Distance;
 
-typedef struct
-{
+typedef struct {
   int n;
   char **cities;
   Distance *distances;
 } DistanceTable;
 
-typedef struct
-{
+typedef struct {
   char key;
   char *description;
 } Menu;
 
-void setConsoleColor(int color)
-{
+void setConsoleColor(int color) {
 #ifdef _WIN32
   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 #else
@@ -104,8 +108,7 @@ DistanceTable loadData()
   setConsoleColor(COLOR_PRIMARY);
   char path[100];
   scanf("%99s", &path[0]);
-  if (path[0] < 0)
-  {
+  if (path[0] < 0) {
     setConsoleColor(COLOR_DEFAULT);
     distanceTable.n = -1;
     return distanceTable;
@@ -113,23 +116,17 @@ DistanceTable loadData()
   printf("\n");
 
   FILE *fpointer = fopen(path, "r");
-  if (fpointer == NULL)
-  {
-    if (access(path, F_OK) == 0)
-    {
+  if (fpointer == NULL) {
+    if (access(path, F_OK) == 0) {
       setConsoleColor(COLOR_ERROR);
       printf("Error loading data: File is blocked by a program.\n");
-    }
-    else
-    {
+    } else {
       setConsoleColor(COLOR_ERROR);
       printf("Error loading data: File not found.\n");
     }
     distanceTable.n = -1;
     return distanceTable;
-  }
-  else
-  {
+  } else {
     ssize_t read;
     char *line = NULL;
     size_t len = 10;
@@ -138,26 +135,24 @@ DistanceTable loadData()
     if ((read = getline(&line, &len, fpointer)) != -1) //TODO look how this works
     {
       char *city = strtok(line, "\n ");
-      while (city != NULL)
-      {
-        if (distanceTable.n % memcycle == 0)
-        { // Allocate memory every (memcycle)th step/word
+      while (city != NULL) {
+        if (distanceTable.n % memcycle ==
+            0) { // Allocate memory every (memcycle)th step/word
           char **tmpCities;
-          tmpCities = realloc(distanceTable.cities, (distanceTable.n + memcycle) * sizeof(char *));
-          if (tmpCities == NULL)
-          {
+          tmpCities = realloc(distanceTable.cities,
+                              (distanceTable.n + memcycle) * sizeof(char *));
+          if (tmpCities == NULL) {
             setConsoleColor(COLOR_ERROR);
             printf("Error: Out of memory.\n");
             distanceTable.n = -1;
             return distanceTable;
-          }
-          else
-          {
+          } else {
             distanceTable.cities = tmpCities;
           }
         }
 
-        distanceTable.cities[distanceTable.n] = calloc(strlen(city) + 1, sizeof(char));
+        distanceTable.cities[distanceTable.n] =
+            calloc(strlen(city) + 1, sizeof(char));
 
         strcpy(distanceTable.cities[distanceTable.n], city);
 
@@ -165,56 +160,43 @@ DistanceTable loadData()
         distanceTable.n++;
       }
 
-      distanceTable.distances = calloc(distanceTable.n * distanceTable.n, sizeof(Distance));
-      for (int i = 0; i < distanceTable.n; i++)
-      {
+      distanceTable.distances =
+          calloc(distanceTable.n * distanceTable.n, sizeof(Distance));
+      for (int i = 0; i < distanceTable.n; i++) {
         read = getline(&line, &len, fpointer);
-        if (read > 0)
-        {
+        if (read > 0) {
           char *distString = strtok(line, " \n");
-          for (int j = 0; j < distanceTable.n; j++)
-          {
+          for (int j = 0; j < distanceTable.n; j++) {
             long dist = strtol(distString, NULL, 0);
 
             if (i == j) // start is destination
             {
-              if (dist != 0)
-              {
+              if (dist != 0) {
                 setConsoleColor(COLOR_ERROR);
-                printf("Error reading from file: Expected '0', got '%s' in line %u word %u.\n", distString, i + 2, j + 1);
+                printf("Error reading from file: Expected '0', got '%s' in "
+                       "line %u word %u.\n",
+                       distString, i + 2, j + 1);
                 i = j = distanceTable.n;
-              }
-              else
-              {
-                Distance distance = {
-                    .from = i,
-                    .to = j,
-                    .dist = dist};
+              } else {
+                Distance distance = {.from = i, .to = j, .dist = dist};
                 distanceTable.distances[i * distanceTable.n + j] = distance;
               }
-            }
-            else
-            {
-              if (dist > 0)
-              {
-                Distance distance = {
-                    .from = i,
-                    .to = j,
-                    .dist = dist};
+            } else {
+              if (dist > 0) {
+                Distance distance = {.from = i, .to = j, .dist = dist};
                 distanceTable.distances[i * distanceTable.n + j] = distance;
-              }
-              else
-              {
+              } else {
                 setConsoleColor(COLOR_ERROR);
-                printf("Error reading from file: Expected number greater than 0, got '%s' in line %u word %u.\n", distString, i + 2, j + 1);
+                printf("Error reading from file: Expected number greater than "
+                       "0, got '%s' in line %u "
+                       "word %u.\n",
+                       distString, i + 2, j + 1);
                 i = j = distanceTable.n;
               }
             }
             distString = strtok(NULL, "\n ");
           }
-        }
-        else
-        {
+        } else {
           setConsoleColor(COLOR_ERROR);
           printf("Error reading from file: Line %u is empty.\n", i);
           i = distanceTable.n;
@@ -223,8 +205,7 @@ DistanceTable loadData()
     }
 
     fclose(fpointer);
-    if (line)
-    {
+    if (line) {
       free(line);
     }
     setConsoleColor(COLOR_SUCCESS);
@@ -233,12 +214,10 @@ DistanceTable loadData()
   }
 }
 
-void saveData()
-{
-  printf("save");
-}
+void saveData() { printf("save"); }
 
-void showData(DistanceTable distanceTable) //TODO Print if there are unsaved changes
+void showData(
+    DistanceTable distanceTable) // TODO Print if there are unsaved changes
 {
   // Check if there is any data to display
   if (distanceTable.n > 0)
@@ -292,48 +271,146 @@ void showData(DistanceTable distanceTable) //TODO Print if there are unsaved cha
       }
       printf("\n");
     }
-  }
-  else
-  {
+  } else {
     printf("The distance table is empty.\n");
   }
 }
 
-void changeDistanceBetweenCities()
-{
-  printf("change distance");
+int getCityNumber(DistanceTable *distanceTable, char city[100]) {
+  for (int i = 0; i < distanceTable->n; i++) {
+    if (strcmp(distanceTable->cities[i], city) == 0) {
+      return i;
+    }
+  }
+  return -1; // City was not found
 }
 
-void calculateShortestRoute()
-{
-  printf("calculate");
+Distance *getDistanceStructBetweenCities(DistanceTable *distanceTable, int from,
+                                         int to) {
+  for (int i = 0; i < distanceTable->n * distanceTable->n - 1; i++) {
+    if (from == distanceTable->distances[i].from &&
+        to == distanceTable->distances[i].to)
+      return &distanceTable->distances[i];
+  }
+
+  return 0;
 }
 
-void exitProgram()
-{
+// TODO Error in reading complete file? Last city isn't resolved. Is my code
+// wrong?
+void changeDistanceBetweenCities(DistanceTable *distanceTable) {
+  if (distanceTable->n == 0) {
+    setConsoleColor(COLOR_ERROR);
+    printf("Please load a distance table first.\n");
+    return;
+  }
+
+  setConsoleColor(COLOR_DEFAULT);
+  printf("Please enter the name of the first city:\n");
+  char firstCity[100];
+  scanf("%s", firstCity);
+
+  int firstCityNumber = getCityNumber(distanceTable, firstCity);
+  if (firstCityNumber == -1) {
+    setConsoleColor(COLOR_ERROR);
+    printf("This city doesn't exist.\n");
+    return;
+  }
+
+  printf("\n");
+
+  printf("Please enter the name of the second city:\n");
+  char secondCity[100];
+  scanf("%s", secondCity);
+
+  int secondCityNumber = getCityNumber(distanceTable, secondCity);
+  if (secondCityNumber == -1) {
+    setConsoleColor(COLOR_ERROR);
+    printf("This city doesn't exist.\n");
+    return;
+  }
+
+  printf("\n");
+
+  Distance *firstToSecond = getDistanceStructBetweenCities(
+      distanceTable, firstCityNumber, secondCityNumber);
+  Distance *secondToFirst = getDistanceStructBetweenCities(
+      distanceTable, secondCityNumber, firstCityNumber);
+  printf("Current distances:\n");
+  printf("%s to %s: %d\n", firstCity, secondCity, firstToSecond->dist);
+  printf("%s to %s: %d\n", secondCity, firstCity, secondToFirst->dist);
+  printf("\n");
+
+  bool invalid;
+  int firstDist;
+  int secondDist;
+  char input[100];
+  // TODO Maybe put into a helper method
+
+  do {
+    invalid = false;
+    printf("Please input a new distance for %s to %s\n", firstCity, secondCity);
+    scanf("%s", input);
+    long int newDistance = strtol(input, NULL, 10);
+
+    // Check for validity
+    if (newDistance < 0) {
+      printf("The distance must be positiv.\n");
+      invalid = true;
+    } else if (newDistance > INT_MAX) {
+      printf("The number is too big.\n");
+      invalid = true;
+    } else {
+      firstDist = (int)newDistance;
+    }
+  } while (invalid);
+
+  do {
+    invalid = false;
+    printf("Please input a new distance for %s to %s\n", secondCity, firstCity);
+    scanf("%s", input);
+    long int newDistance = strtol(input, NULL, 10);
+
+    // Check for validity
+    if (newDistance < 0) {
+      printf("The distance must be positiv.\n");
+      invalid = true;
+    } else if (newDistance > INT_MAX) {
+      printf("The number is too big.\n");
+      invalid = true;
+    } else {
+      secondDist = (int)newDistance;
+    }
+  } while (invalid);
+
+  // Replace distances
+  firstToSecond->dist = firstDist;
+  secondToFirst->dist = secondDist;
+
+  printf("Success!");
+}
+
+void calculateShortestRoute() { printf("calculate"); }
+
+void exitProgram() {
   printf("exit");
   setConsoleColor(COLOR_DEFAULT);
 }
 
-void printMenu(Menu *menu, int length)
-{
+void printMenu(Menu *menu, int length) {
   printf("\n");
-  for (int i = 0; i < length; i++)
-  {
+  for (int i = 0; i < length; i++) {
     printf("(%c) %s\n", menu[i].key, menu[i].description);
   }
 }
 
-int main()
-{
+int main() {
 #ifdef _WIN32
   SetConsoleOutputCP(65001);
 #endif
 
-  DistanceTable distanceTable = {
-      .n = 0};
-  DistanceTable tmpDistanceTable = {
-      .n = 0};
+  DistanceTable distanceTable = {.n = 0};
+  DistanceTable tmpDistanceTable = {.n = 0};
 
   Menu startMenu[] = {
       {'a', "Entfernungstabelle laden"},
@@ -346,20 +423,17 @@ int main()
   int startMenuLength = sizeof(startMenu) / sizeof(startMenu[0]);
 
   char c;
-  do
-  {
+  do {
     setConsoleColor(COLOR_DEFAULT);
     printMenu(startMenu, startMenuLength);
 
     setConsoleColor(COLOR_PRIMARY);
-    do
-    {
+    do {
       c = getchar();
     } while (isspace(c));
     printf("\n");
 
-    switch (c)
-    {
+    switch (c) {
     case 'a':
       tmpDistanceTable = loadData();
       if (tmpDistanceTable.n >= 0)
@@ -374,7 +448,7 @@ int main()
       showData(distanceTable);
       break;
     case 'd':
-      changeDistanceBetweenCities();
+      changeDistanceBetweenCities(&distanceTable);
       break;
     case 'e':
       calculateShortestRoute();
