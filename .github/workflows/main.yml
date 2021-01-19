@@ -44,7 +44,7 @@ jobs:
           source: '.'
           extensions: 'c'
           clangFormatVersion: 11
-          style: llvm
+          style: '{ BasedOnStyle: LLVM, ColumnLimit: 0 }'
           inplace: True
       - uses: EndBug/add-and-commit@v4
         with:
