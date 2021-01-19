@@ -1,13 +1,12 @@
 // Kurs INF20A
 // Bearbeiter: Jan Fröhlich, Gabriel Nill, Fabian Weller
 
-// TODO: Discuss whether we should switch to German output because the menu
-// itself has to be German.
+// TODO: Discuss whether we should switch to German output because the menu itself has to be German.
 
 #include <ctype.h> // iscntrl() isspace() Funktionen für ASCII-Zeichen
 #include <limits.h>
 #include <stdbool.h>
-#include <stdio.h> // Ein- und Ausgabefunktionen
+#include <stdio.h>  // Ein- und Ausgabefunktionen
 #include <stdlib.h> // Stringkonvertierung, Zufallszahlen, Speicherallokation, Sortieren u.a.
 #include <string.h> // prototype for strtok() because gcc expects int as return type
 #include <unistd.h> // access(), maybe not needed
@@ -64,7 +63,7 @@ int intDigits(int n) {
   return 1 + intDigits(n / 10);
 }
 
-// Return length of string with support for unicode (ö counts as one character)
+// Return length of string with support for UTF-8 (ö counts as one character)
 int strlen_utf8(char *s) {
   int i = 0, j = 0;
   while (s[i]) {
@@ -75,9 +74,8 @@ int strlen_utf8(char *s) {
   return j;
 }
 
-// Norms a string to a specific minimum/maximum length with support for unicode.
-// If string is smaller than minimum, it will fill the rest with the filler
-// char. If larger, it will crop.
+// Norms a string to a specific minimum/maximum length with support for UTF-8.
+// If string is smaller than minimum, it will fill the rest with the filler char. If larger, it will crop.
 char *substr_utf8(const char *src, size_t min, size_t max, char filler) {
   size_t i = 0, j = 0;
   while (j < max && src[i]) {
@@ -130,9 +128,7 @@ DistanceTable loadData() {
     size_t len = 10;
     int memcycle = 4;
 
-    if ((read = getline(&line, &len, fpointer)) !=
-        -1) // TODO look how this works
-    {
+    if ((read = getline(&line, &len, fpointer)) != -1) { // TODO look how this works
       char *city = strtok(line, "\n ");
       while (city != NULL) {
         if (distanceTable.n % memcycle ==
@@ -171,8 +167,7 @@ DistanceTable loadData() {
             if (i == j) { // start city == destination
               if (dist != 0) {
                 setConsoleColor(COLOR_ERROR);
-                printf("Error reading from file: Expected '0', got '%s' in "
-                       "line %u word %u.\n",
+                printf("Error reading from file: Expected '0', got '%s' in line %u word %u.\n",
                        distString, i + 2, j + 1);
                 i = j = distanceTable.n;
               } else {
@@ -185,9 +180,7 @@ DistanceTable loadData() {
                 distanceTable.distances[i * distanceTable.n + j] = distance;
               } else {
                 setConsoleColor(COLOR_ERROR);
-                printf("Error reading from file: Expected number greater than "
-                       "0, got '%s' in line %u "
-                       "word %u.\n",
+                printf("Error reading from file: Expected number greater than 0, got '%s' in line %u word %u.\n",
                        distString, i + 2, j + 1);
                 i = j = distanceTable.n;
               }
@@ -221,7 +214,7 @@ void showData(
   if (distanceTable.n > 0) {
     int largestCityNameLength = 0;
 
-    // Initialize length of column (in chars) with minimum value of 3
+    // Initialize length of column (in chars) with minimum value of 3 // TODO change to array
     int *columnLengths;
     columnLengths = calloc(distanceTable.n, sizeof(int));
     for (int i = 0; i < distanceTable.n; i++) {
@@ -281,19 +274,16 @@ int getCityNumber(DistanceTable *distanceTable, char city[100]) {
   return -1; // City was not found
 }
 
-Distance *getDistanceStructBetweenCities(DistanceTable *distanceTable, int from,
-                                         int to) {
+Distance *getDistanceStructBetweenCities(DistanceTable *distanceTable, int from, int to) {
   for (int i = 0; i < distanceTable->n * distanceTable->n - 1; i++) {
-    if (from == distanceTable->distances[i].from &&
-        to == distanceTable->distances[i].to)
+    if (from == distanceTable->distances[i].from && to == distanceTable->distances[i].to)
       return &distanceTable->distances[i];
   }
 
   return 0;
 }
 
-// TODO Error in reading complete file? Last city isn't resolved. Is my code
-// wrong?
+// TODO Error in reading complete file? Last city isn't resolved. Is my code wrong?
 void changeDistanceBetweenCities(DistanceTable *distanceTable) {
   if (distanceTable->n == 0) {
     setConsoleColor(COLOR_ERROR);
@@ -328,10 +318,8 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
 
   printf("\n");
 
-  Distance *firstToSecond = getDistanceStructBetweenCities(
-      distanceTable, firstCityNumber, secondCityNumber);
-  Distance *secondToFirst = getDistanceStructBetweenCities(
-      distanceTable, secondCityNumber, firstCityNumber);
+  Distance *firstToSecond = getDistanceStructBetweenCities(distanceTable, firstCityNumber, secondCityNumber);
+  Distance *secondToFirst = getDistanceStructBetweenCities(distanceTable, secondCityNumber, firstCityNumber);
   printf("Current distances:\n");
   printf("%s to %s: %d\n", firstCity, secondCity, firstToSecond->dist);
   printf("%s to %s: %d\n", secondCity, firstCity, secondToFirst->dist);
@@ -386,7 +374,9 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
   printf("Success!");
 }
 
-void calculateShortestRoute() { printf("calculate"); }
+void calculateShortestRoute() {
+  printf("calculate");
+}
 
 void exitProgram() {
   printf("exit");
