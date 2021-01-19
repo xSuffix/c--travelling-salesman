@@ -7,7 +7,7 @@
 #include <ctype.h> // iscntrl() isspace() Funktionen für ASCII-Zeichen
 #include <limits.h>
 #include <stdbool.h>
-#include <stdio.h> // Ein- und Ausgabefunktionen
+#include <stdio.h>  // Ein- und Ausgabefunktionen
 #include <stdlib.h> // Stringkonvertierung, Zufallszahlen, Speicherallokation, Sortieren u.a.
 #include <string.h> // prototype for strtok() because gcc expects int as return type
 #include <unistd.h> // access(), maybe not needed
