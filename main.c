@@ -96,8 +96,10 @@ char *substr_utf8(const char *src, size_t min, size_t max, char filler) {
 }
 
 // Loads the distance table from a file
-DistanceTable loadData() {
-  DistanceTable distanceTable = {.n = 0};
+DistanceTable *loadData() {
+  DistanceTable *distanceTable = malloc(sizeof(DistanceTable));
+  distanceTable->n = 0;
+  distanceTable->cities = NULL;
 
   setConsoleColor(COLOR_DEFAULT);
   printf("Please enter the name of the file which should be loaded.\n");
@@ -106,8 +108,7 @@ DistanceTable loadData() {
   scanf("%99s", &path[0]);
   if (path[0] < 0) {
     setConsoleColor(COLOR_DEFAULT);
-    distanceTable.n = -1;
-    return distanceTable;
+    return NULL;
   }
   printf("\n");
 
@@ -120,8 +121,7 @@ DistanceTable loadData() {
       setConsoleColor(COLOR_ERROR);
       printf("Error loading data: File not found.\n");
     }
-    distanceTable.n = -1;
-    return distanceTable;
+    return NULL;
   } else {
     ssize_t read;
     char *line = NULL;
@@ -131,37 +131,32 @@ DistanceTable loadData() {
     if ((read = getline(&line, &len, fpointer)) != -1) { // TODO look how this works
       char *city = strtok(line, "\n ");
       while (city != NULL) {
-        if (distanceTable.n % memcycle ==
-            0) { // Allocate memory every (memcycle)th step/word
+        // Allocate memory every (memcycle)th step/word
+        if (distanceTable->n % memcycle == 0) {
           char **tmpCities;
-          tmpCities = realloc(distanceTable.cities,
-                              (distanceTable.n + memcycle) * sizeof(char *));
+          tmpCities = realloc(distanceTable->cities, (distanceTable->n + memcycle) * sizeof(char *));
           if (tmpCities == NULL) {
             setConsoleColor(COLOR_ERROR);
             printf("Error: Out of memory.\n");
-            distanceTable.n = -1;
-            return distanceTable;
+            return NULL;
           } else {
-            distanceTable.cities = tmpCities;
+            distanceTable->cities = tmpCities;
           }
         }
 
-        distanceTable.cities[distanceTable.n] =
-            calloc(strlen(city) + 1, sizeof(char));
-
-        strcpy(distanceTable.cities[distanceTable.n], city);
+        distanceTable->cities[distanceTable->n] = calloc(strlen(city) + 1, sizeof(char));
+        strcpy(distanceTable->cities[distanceTable->n], city);
 
         city = strtok(NULL, "\n ");
-        distanceTable.n++;
+        distanceTable->n++;
       }
 
-      distanceTable.distances =
-          calloc(distanceTable.n * distanceTable.n, sizeof(Distance));
-      for (int i = 0; i < distanceTable.n; i++) {
+      distanceTable->distances = calloc(distanceTable->n * distanceTable->n, sizeof(Distance));
+      for (int i = 0; i < distanceTable->n; i++) {
         read = getline(&line, &len, fpointer);
         if (read > 0) {
           char *distString = strtok(line, " \n");
-          for (int j = 0; j < distanceTable.n; j++) {
+          for (int j = 0; j < distanceTable->n; j++) {
             long dist = strtol(distString, NULL, 0);
 
             if (i == j) { // start city == destination
@@ -169,20 +164,20 @@ DistanceTable loadData() {
                 setConsoleColor(COLOR_ERROR);
                 printf("Error reading from file: Expected '0', got '%s' in line %u word %u.\n",
                        distString, i + 2, j + 1);
-                i = j = distanceTable.n;
+                i = j = distanceTable->n;
               } else {
                 Distance distance = {.from = i, .to = j, .dist = dist};
-                distanceTable.distances[i * distanceTable.n + j] = distance;
+                distanceTable->distances[i * distanceTable->n + j] = distance;
               }
             } else {
               if (dist > 0) {
                 Distance distance = {.from = i, .to = j, .dist = dist};
-                distanceTable.distances[i * distanceTable.n + j] = distance;
+                distanceTable->distances[i * distanceTable->n + j] = distance;
               } else {
                 setConsoleColor(COLOR_ERROR);
                 printf("Error reading from file: Expected number greater than 0, got '%s' in line %u word %u.\n",
                        distString, i + 2, j + 1);
-                i = j = distanceTable.n;
+                i = j = distanceTable->n;
               }
             }
             distString = strtok(NULL, "\n ");
@@ -190,7 +185,7 @@ DistanceTable loadData() {
         } else {
           setConsoleColor(COLOR_ERROR);
           printf("Error reading from file: Line %u is empty.\n", i);
-          i = distanceTable.n;
+          i = distanceTable->n;
         }
       }
     }
@@ -207,29 +202,27 @@ DistanceTable loadData() {
 
 void saveData() { printf("save"); }
 
-void showData(
-    DistanceTable distanceTable) // TODO Print if there are unsaved changes
-{
+void showData(DistanceTable *distanceTable) { // TODO Print if there are unsaved changes
   // Check if there is any data to display
-  if (distanceTable.n > 0) {
+  if (distanceTable) {
     int largestCityNameLength = 0;
 
     // Initialize length of column (in chars) with minimum value of 3 // TODO change to array
     int *columnLengths;
-    columnLengths = calloc(distanceTable.n, sizeof(int));
-    for (int i = 0; i < distanceTable.n; i++) {
+    columnLengths = calloc(distanceTable->n, sizeof(int));
+    for (int i = 0; i < distanceTable->n; i++) {
       columnLengths[i] = 3;
     }
 
-    for (int i = 0; i < distanceTable.n; i++) {
+    for (int i = 0; i < distanceTable->n; i++) {
       // Find out how many characters the longest city name has
-      int cityNameLength = strlen_utf8(distanceTable.cities[i]);
+      int cityNameLength = strlen_utf8(distanceTable->cities[i]);
       if (cityNameLength > largestCityNameLength)
         largestCityNameLength = cityNameLength;
 
-      for (int j = 0; j < distanceTable.n; j++) {
+      for (int j = 0; j < distanceTable->n; j++) {
         // Find out how many digits the largest distance has
-        int distanceLength = intDigits(distanceTable.distances[i * 5 + j].dist);
+        int distanceLength = intDigits(distanceTable->distances[i * 5 + j].dist);
         if (distanceLength > columnLengths[j])
           columnLengths[j] = distanceLength;
       }
@@ -238,25 +231,21 @@ void showData(
     // Print title row
     printf("%*s", largestCityNameLength + 1, ""); // Margin for the first line
     setConsoleColor(COLOR_INFO);
-    for (int i = 0; i < distanceTable.n; i++) {
+    for (int i = 0; i < distanceTable->n; i++) {
       // Print titles of columns
-      printf("%s ", substr_utf8(distanceTable.cities[i], columnLengths[i],
-                                columnLengths[i], ' '));
+      printf("%s ", substr_utf8(distanceTable->cities[i], columnLengths[i], columnLengths[i], ' '));
     }
     printf("\n");
 
     // Print rows except for title row
-    for (int i = 0; i < distanceTable.n; i++) {
+    for (int i = 0; i < distanceTable->n; i++) {
       setConsoleColor(COLOR_INFO);
-      // Print titles of rows with margin, so that the entire row has the same
-      // width
-      printf("%s ", substr_utf8(distanceTable.cities[i], largestCityNameLength,
-                                largestCityNameLength, ' '));
+      // Print titles of rows with margin, so that the entire row has the same width
+      printf("%s ", substr_utf8(distanceTable->cities[i], largestCityNameLength, largestCityNameLength, ' '));
       setConsoleColor(COLOR_DEFAULT);
-      for (int j = 0; j < distanceTable.n; j++) {
+      for (int j = 0; j < distanceTable->n; j++) {
         // Print digits (distances)
-        printf("%*d ", columnLengths[j],
-               distanceTable.distances[i * distanceTable.n + j].dist);
+        printf("%*d ", columnLengths[j], distanceTable->distances[i * distanceTable->n + j].dist);
       }
       printf("\n");
     }
@@ -395,8 +384,8 @@ int main() {
   SetConsoleOutputCP(65001);
 #endif
 
-  DistanceTable distanceTable = {.n = 0};
-  DistanceTable tmpDistanceTable = {.n = 0};
+  DistanceTable *distanceTable = NULL;
+  DistanceTable *tmpDistanceTable = NULL;
 
   Menu startMenu[] = {
       {'a', "Entfernungstabelle laden"},
@@ -422,9 +411,8 @@ int main() {
     switch (c) {
     case 'a':
       tmpDistanceTable = loadData();
-      if (tmpDistanceTable.n >= 0) {
+      if (tmpDistanceTable)
         distanceTable = tmpDistanceTable;
-      }
       break;
     case 'b':
       saveData();
@@ -433,7 +421,7 @@ int main() {
       showData(distanceTable);
       break;
     case 'd':
-      changeDistanceBetweenCities(&distanceTable);
+      changeDistanceBetweenCities(distanceTable);
       break;
     case 'e':
       calculateShortestRoute();
