@@ -1,7 +1,10 @@
 // Kurs INF20A
 // Bearbeiter: Jan Fröhlich, Gabriel Nill, Fabian Weller
 
-// TODO: Discuss whether we should switch to German output because the menu itself has to be German.
+// TODO: Offene Fragen:
+// - Konsolenausgabe komplett auf deutsch?
+// - Kommentare komplett auf englisch?
+// - Soll die Datei, in die gespeichert und von der gelesen wird, immer mit .txt enden?
 
 #include <ctype.h> // iscntrl() isspace() Funktionen für ASCII-Zeichen
 #include <limits.h>
@@ -9,7 +12,6 @@
 #include <stdio.h>  // Ein- und Ausgabefunktionen
 #include <stdlib.h> // Stringkonvertierung, Zufallszahlen, Speicherallokation, Sortieren u.a.
 #include <string.h> // prototype for strtok() because gcc expects int as return type
-#include <unistd.h> // access(), maybe not needed
 
 #ifdef _WIN32
 #include <windows.h>
@@ -95,6 +97,16 @@ char *substr_utf8(const char *src, size_t min, size_t max, char filler) {
   return substr;
 }
 
+char *scanFilePath() {
+  setConsoleColor(COLOR_PRIMARY);
+  char *path = calloc(PATH_MAX, sizeof(char));
+  char fmt[64];
+  snprintf(fmt, sizeof fmt, "%%%ds", PATH_MAX - 1);
+  scanf(fmt, &path[0]);
+  printf("\n");
+  return path;
+}
+
 // Loads the distance table from a file
 DistanceTable *loadData() {
   DistanceTable *distanceTable = malloc(sizeof(DistanceTable));
@@ -103,30 +115,23 @@ DistanceTable *loadData() {
 
   setConsoleColor(COLOR_DEFAULT);
   printf("Please enter the name of the file which should be loaded.\n");
-  setConsoleColor(COLOR_PRIMARY);
-  char path[100];
-  scanf("%99s", &path[0]);
-  if (path[0] < 0) {
+
+  char *path = scanFilePath();
+  if (path[0] <= 0) {
     setConsoleColor(COLOR_DEFAULT);
     return NULL;
   }
-  printf("\n");
 
   FILE *fpointer = fopen(path, "r");
   if (fpointer == NULL) {
-    if (access(path, F_OK) == 0) {
-      setConsoleColor(COLOR_ERROR);
-      printf("Error loading data: File is blocked by a program.\n");
-    } else {
-      setConsoleColor(COLOR_ERROR);
-      printf("Error loading data: File not found.\n");
-    }
+    setConsoleColor(COLOR_ERROR);
+    printf("Fehler: Die Datei konnte nicht geöffnet werden. (%s)\n", path);
     return NULL;
   } else {
     ssize_t read;
     char *line = NULL;
     size_t len = 10;
-    int memcycle = 4;
+    int memcycle = 8;
 
     if ((read = getline(&line, &len, fpointer)) != -1) { // TODO look how this works
       char *city = strtok(line, "\n ");
@@ -200,7 +205,47 @@ DistanceTable *loadData() {
   }
 }
 
-void saveData() { printf("save"); }
+int saveData(DistanceTable *distanceTable) {
+  if (distanceTable) {
+    setConsoleColor(COLOR_DEFAULT);
+    printf("Unter welchem Namen soll die Datei gespeichert werden?\n");
+
+    char *path = scanFilePath();
+    if (path[0] <= 0) {
+      setConsoleColor(COLOR_DEFAULT);
+      return 0;
+    }
+
+    FILE *fpointer = fopen(path, "w");
+    if (fpointer) {
+
+      for (int i = 0; i < distanceTable->n; i++) {
+        fprintf(fpointer, "%s ", distanceTable->cities[i]);
+      }
+      fprintf(fpointer, "\n");
+
+      for (int i = 0; i < distanceTable->n; i++) {
+        for (int j = 0; j < distanceTable->n; j++) {
+          fprintf(fpointer, "%d ", distanceTable->distances[distanceTable->n * i + j].dist);
+        }
+        fprintf(fpointer, "\n");
+      }
+      fclose(fpointer);
+
+      setConsoleColor(COLOR_SUCCESS);
+      printf("Die Tabelle wurde erfolgreich gespeichert! (%s)\n", path);
+
+    } else {
+      setConsoleColor(COLOR_ERROR);
+      printf("Fehler: Die Datei konnte unter diesem Pfad nicht gespeichert werden. (%s)\n", path);
+    }
+
+    return 1;
+  }
+  setConsoleColor(COLOR_ERROR);
+  printf("Fehler: Bitte lade zunächst eine Tabelle.\n");
+  return 0;
+}
 
 void showData(DistanceTable *distanceTable) { // TODO Print if there are unsaved changes
   // Check if there is any data to display
@@ -368,8 +413,8 @@ void calculateShortestRoute() {
 }
 
 void exitProgram() {
-  printf("exit");
   setConsoleColor(COLOR_DEFAULT);
+  printf("Das Programm wurde beendet.");
 }
 
 void printMenu(Menu *menu, int length) {
@@ -415,7 +460,7 @@ int main() {
         distanceTable = tmpDistanceTable;
       break;
     case 'b':
-      saveData();
+      saveData(distanceTable);
       break;
     case 'c':
       showData(distanceTable);
@@ -427,6 +472,9 @@ int main() {
       calculateShortestRoute();
       break;
     case 'f':
+      // free(distanceTable->cities); // crashes the programm -> // TODO free memory
+      // free(distanceTable->distances);
+      free(distanceTable);
       exitProgram();
       break;
     case -1:
