@@ -321,7 +321,7 @@ bool checkForInvalidDistance(long num) {
   if (num < 1) {
     setConsoleColor(COLOR_ERROR);
     printf("Die Entfernung muss größer als 0 sein.\n\n");
-    return true; 
+    return true;
   } else if (num > INT_MAX) {
     setConsoleColor(COLOR_ERROR);
     printf("Die Entfernung ist zu groß.\n\n");
@@ -343,10 +343,8 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
   int firstCityNumber;
   int secondCityNumber;
 
-  do
-  {
-    do
-    {
+  do {
+    do {
       invalid = false;
       setConsoleColor(COLOR_DEFAULT);
       printf("Bitte geben Sie den Namen der ersten Stadt ein:\n");
@@ -359,13 +357,12 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
         printf("Diese Stadt konnte in der Entferungstabelle nicht gefunden werden.\n");
         printf("Bitte versuchen Sie es erneut.\n\n");
         invalid = true;
-        }
-      } while (invalid);
+      }
+    } while (invalid);
 
     printf("\n");
 
-    do
-    {
+    do {
       setConsoleColor(COLOR_DEFAULT);
       printf("Bitte geben Sie den Namen der zweiten Stadt ein:\n");
       setConsoleColor(COLOR_PRIMARY);
@@ -380,15 +377,14 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
       }
     } while (invalid);
 
-    if (firstCityNumber == secondCityNumber)
-    {
+    if (firstCityNumber == secondCityNumber) {
       setConsoleColor(COLOR_ERROR);
       printf("Die Städte sind identisch. Bitte geben Sie verschiedene Städte an.\n\n");
       invalid = true;
     }
-    
+
   } while (invalid);
-  
+
   printf("\n");
 
   Distance *firstToSecond = getDistanceStructBetweenCities(distanceTable, firstCityNumber, secondCityNumber);
@@ -427,14 +423,14 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
     newDistance = strtol(input, NULL, 10);
 
     invalid = checkForInvalidDistance(newDistance);
-    
+
   } while (invalid);
   secondDist = (int)newDistance;
 
   // Replace distances
   firstToSecond->dist = firstDist;
   secondToFirst->dist = secondDist;
-  
+
   setConsoleColor(COLOR_SUCCESS);
   printf("\n");
   printf("Die Entfernung wurde erfolgreich geändert!\n");
