@@ -2,8 +2,6 @@
 // Bearbeiter: Jan Fröhlich, Gabriel Nill, Fabian Weller
 
 // TODO: Offene Fragen:
-// - Konsolenausgabe komplett auf deutsch?
-// - Kommentare komplett auf englisch?
 // - Soll die Datei, in die gespeichert und von der gelesen wird, immer mit .txt enden?
 
 #include <ctype.h> // iscntrl() isspace() Funktionen für ASCII-Zeichen
@@ -48,6 +46,7 @@ typedef struct {
   char *description;
 } Menu;
 
+// Portable function for changing the console color
 void setConsoleColor(int color) {
 #ifdef _WIN32
   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
@@ -76,8 +75,8 @@ int strlen_utf8(char *s) {
   return j;
 }
 
-// Norms a string to a specific minimum/maximum length with support for UTF-8.
-// If string is smaller than minimum, it will fill the rest with the filler char. If larger, it will crop.
+// Norm a string to a specific minimum/maximum length with support for UTF-8
+// If string is smaller than minimum, fill the rest with the filler char. If it's larger, crop
 char *substr_utf8(const char *src, size_t min, size_t max, char filler) {
   size_t i = 0, j = 0;
   while (j < max && src[i]) {
@@ -87,7 +86,7 @@ char *substr_utf8(const char *src, size_t min, size_t max, char filler) {
   }
 
   char *substr = "";
-  substr = calloc((i > min ? i : min) + 1, sizeof(char));
+  substr = calloc((i > min ? i : min) + 1, sizeof(char)); // TODO free()
   memcpy(substr, &src[0], i);
   substr[i] = '\0';
 
@@ -97,6 +96,7 @@ char *substr_utf8(const char *src, size_t min, size_t max, char filler) {
   return substr;
 }
 
+// Scan console for a file path and return it
 char *scanFilePath() {
   setConsoleColor(COLOR_PRIMARY);
   char *path = calloc(PATH_MAX, sizeof(char));
@@ -107,17 +107,17 @@ char *scanFilePath() {
   return path;
 }
 
-// Loads the distance table from a file
+// Load the distance table from a file
 DistanceTable *loadData() {
   DistanceTable *distanceTable = malloc(sizeof(DistanceTable));
   distanceTable->n = 0;
   distanceTable->cities = NULL;
 
+  // Retrieve path to file
   setConsoleColor(COLOR_DEFAULT);
-  printf("Please enter the name of the file which should be loaded.\n");
-
+  printf("Bitte geben Sie den Pfad zu der Textdatei an, die geladen werden soll.\n");
   char *path = scanFilePath();
-  if (path[0] <= 0) {
+  if (path[0] <= 0) { // No input, program might have been terminated (ctrl + c)
     setConsoleColor(COLOR_DEFAULT);
     return NULL;
   }
@@ -127,80 +127,79 @@ DistanceTable *loadData() {
     setConsoleColor(COLOR_ERROR);
     printf("Fehler: Die Datei konnte nicht geöffnet werden. (%s)\n", path);
     return NULL;
+
   } else {
-    ssize_t read;
     char *line = NULL;
-    size_t len = 10;
+    size_t len = 0;
     int memcycle = 8;
 
-    if ((read = getline(&line, &len, fpointer)) != -1) { // TODO look how this works
-      char *city = strtok(line, "\n ");
-      while (city != NULL) {
-        // Allocate memory every (memcycle)th step/word
+    // Read city names from first line and store them in distanceTable->cities
+    if (getline(&line, &len, fpointer) > 0) {
+      for (char *city = strtok(line, "\n "); city != NULL; city = strtok(NULL, "\n ")) {
+        // Allocate memory for char pointers every (memcycle)th step/word
         if (distanceTable->n % memcycle == 0) {
           char **tmpCities;
           tmpCities = realloc(distanceTable->cities, (distanceTable->n + memcycle) * sizeof(char *));
           if (tmpCities == NULL) {
             setConsoleColor(COLOR_ERROR);
-            printf("Error: Out of memory.\n");
+            printf("Fehler: Die Zuweisung von Arbeitsspeicher ist fehlgeschlagen.\n");
             return NULL;
           } else {
             distanceTable->cities = tmpCities;
           }
         }
 
+        // Store the actual string/city
         distanceTable->cities[distanceTable->n] = calloc(strlen(city) + 1, sizeof(char));
-        strcpy(distanceTable->cities[distanceTable->n], city);
-
-        city = strtok(NULL, "\n ");
-        distanceTable->n++;
+        strcpy(distanceTable->cities[distanceTable->n++], city);
       }
+    } else {
+      setConsoleColor(COLOR_ERROR);
+      printf("Fehler beim Einlesen: Die Datei konnte nicht gelesen werden. Stellen Sie sicher, dass keine anderen Prozese darauf zugreifen und das Format eingehalten wurde.\n");
+      return NULL;
+    }
 
-      distanceTable->distances = calloc(distanceTable->n * distanceTable->n, sizeof(Distance));
-      for (int i = 0; i < distanceTable->n; i++) {
-        read = getline(&line, &len, fpointer);
-        if (read > 0) {
-          char *distString = strtok(line, " \n");
-          for (int j = 0; j < distanceTable->n; j++) {
-            long dist = strtol(distString, NULL, 0);
+    // Read distances between cities from second to (n+1)th line and store them in distanceTable->distances
+    distanceTable->distances = calloc(distanceTable->n * distanceTable->n, sizeof(Distance));
+    for (int i = 0; i < distanceTable->n; i++) {
+      if (getline(&line, &len, fpointer) > 0) {
+        char *distString = strtok(line, " \n");
+        for (int j = 0; j < distanceTable->n; j++) {
+          int dist = strtol(distString, NULL, 0);
 
-            if (i == j) { // start city == destination
-              if (dist != 0) {
-                setConsoleColor(COLOR_ERROR);
-                printf("Error reading from file: Expected '0', got '%s' in line %u word %u.\n",
-                       distString, i + 2, j + 1);
-                i = j = distanceTable->n;
-              } else {
-                Distance distance = {.from = i, .to = j, .dist = dist};
-                distanceTable->distances[i * distanceTable->n + j] = distance;
-              }
+          // Check if dist is valid
+          if (i == j) { // start city == destination
+            if (dist != 0) {
+              setConsoleColor(COLOR_ERROR);
+              printf("Fehler beim Einlesen: Die Entfernung einer Stadt zu sich selbst muss immer 0 sein, in der Datei steht jedoch \"%s\" (%u. Zeile, %u. Wort).\n", distString, i + 2, j + 1);
+              return NULL;
             } else {
-              if (dist > 0) {
-                Distance distance = {.from = i, .to = j, .dist = dist};
-                distanceTable->distances[i * distanceTable->n + j] = distance;
-              } else {
-                setConsoleColor(COLOR_ERROR);
-                printf("Error reading from file: Expected number greater than 0, got '%s' in line %u word %u.\n",
-                       distString, i + 2, j + 1);
-                i = j = distanceTable->n;
-              }
+              Distance distance = {.from = i, .to = j, .dist = dist};
+              distanceTable->distances[i * distanceTable->n + j] = distance;
             }
-            distString = strtok(NULL, "\n ");
+          } else {
+            if (dist > 0) {
+              Distance distance = {.from = i, .to = j, .dist = dist};
+              distanceTable->distances[i * distanceTable->n + j] = distance;
+            } else {
+              setConsoleColor(COLOR_ERROR);
+              printf("Fehler beim Einlesen: Die Entfernung zwischen verschiedenen Städten muss größer als 0 sein, in der Datei steht jedoch \"%s\" (%u. Zeile, %u. Wort).\n", distString, i + 2, j + 1);
+              return NULL;
+            }
           }
-        } else {
-          setConsoleColor(COLOR_ERROR);
-          printf("Error reading from file: Line %u is empty.\n", i);
-          i = distanceTable->n;
+          distString = strtok(NULL, "\n ");
         }
+      } else {
+        setConsoleColor(COLOR_ERROR);
+        printf("Fehler beim Einlesen: Zeile %u ist leer. Stellen Sie sicher, dass es gleich viele Zeilen wie Städte gibt.\n", i);
+        return NULL;
       }
     }
 
     fclose(fpointer);
-    if (line) {
-      free(line);
-    }
+
     setConsoleColor(COLOR_SUCCESS);
-    printf("The distance table was loaded successfully. (%s)\n", path);
+    printf("Die Entfernungstabelle wurde erfolgreich geladen! (%s)\n", path);
     return distanceTable;
   }
 }
@@ -233,7 +232,7 @@ int saveData(DistanceTable *distanceTable) {
       fclose(fpointer);
 
       setConsoleColor(COLOR_SUCCESS);
-      printf("Die Tabelle wurde erfolgreich gespeichert! (%s)\n", path);
+      printf("Die Entfernungstabelle wurde erfolgreich gespeichert! (%s)\n", path);
 
     } else {
       setConsoleColor(COLOR_ERROR);
@@ -243,12 +242,11 @@ int saveData(DistanceTable *distanceTable) {
     return 1;
   }
   setConsoleColor(COLOR_ERROR);
-  printf("Fehler: Bitte lade zunächst eine Tabelle.\n");
+  printf("Fehler: Bitte laden Sie zunächst eine Entfernungstabelle.\n");
   return 0;
 }
 
 void showData(DistanceTable *distanceTable) { // TODO Print if there are unsaved changes
-  // Check if there is any data to display
   if (distanceTable) {
     int largestCityNameLength = 0;
 
@@ -295,7 +293,8 @@ void showData(DistanceTable *distanceTable) { // TODO Print if there are unsaved
       printf("\n");
     }
   } else {
-    printf("The distance table is empty.\n");
+    setConsoleColor(COLOR_WARNING);
+    printf("Die Entfernungstabelle ist leer.\n");
   }
 }
 
@@ -412,11 +411,13 @@ void calculateShortestRoute() {
   printf("calculate");
 }
 
-void exitProgram() {
+int exitProgram() {
   setConsoleColor(COLOR_DEFAULT);
-  printf("Das Programm wurde beendet.");
+  printf("Das Programm wurde beendet.\n");
+  return 1;
 }
 
+// Print all options of a menu
 void printMenu(Menu *menu, int length) {
   printf("\n");
   for (int i = 0; i < length; i++) {
@@ -426,7 +427,7 @@ void printMenu(Menu *menu, int length) {
 
 int main() {
 #ifdef _WIN32
-  SetConsoleOutputCP(65001);
+  SetConsoleOutputCP(65001); // Charset UTF-8
 #endif
 
   DistanceTable *distanceTable = NULL;
@@ -442,6 +443,7 @@ int main() {
   };
   int startMenuLength = sizeof(startMenu) / sizeof(startMenu[0]);
 
+  // Menu
   char c;
   do {
     setConsoleColor(COLOR_DEFAULT);
@@ -471,17 +473,29 @@ int main() {
     case 'e':
       calculateShortestRoute();
       break;
-    case 'f':
-      // free(distanceTable->cities); // crashes the programm -> // TODO free memory
-      // free(distanceTable->distances);
-      free(distanceTable);
-      exitProgram();
+    case 'f': {
+      if (exitProgram()) {
+        // Free memory
+        if (distanceTable) {
+          if (distanceTable->cities) {
+            for (int i = 0; i < distanceTable->n; i++) {
+              free(distanceTable->cities[i]);
+            }
+            free(distanceTable->cities);
+          }
+          if (distanceTable->distances) {
+            free(distanceTable->distances);
+          }
+          free(distanceTable);
+        }
+      }
       break;
+    }
     case -1:
       break;
     default:
       setConsoleColor(COLOR_ERROR);
-      printf("'%c' is not a valid input.\n", c);
+      printf("\"%c\" ist keine gültige Eingabe.\n", c);
     }
   } while (c != 'f');
   return 0;
