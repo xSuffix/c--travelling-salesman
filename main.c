@@ -316,95 +316,128 @@ Distance *getDistanceStructBetweenCities(DistanceTable *distanceTable, int from,
   return 0;
 }
 
-// TODO Error in reading complete file? Last city isn't resolved. Is my code wrong?
+// This checks, if the entered distance is positive and fits into an Integer. So the Long can be safely typecasted to an Int.
+bool checkForInvalidDistance(long num) {
+  if (num < 1) {
+    setConsoleColor(COLOR_ERROR);
+    printf("Die Entfernung muss größer als 0 sein.\n\n");
+    return true; 
+  } else if (num > INT_MAX) {
+    setConsoleColor(COLOR_ERROR);
+    printf("Die Entfernung ist zu groß.\n\n");
+    return true;
+  }
+  return false;
+}
+
 void changeDistanceBetweenCities(DistanceTable *distanceTable) {
   if (distanceTable->n == 0) {
     setConsoleColor(COLOR_ERROR);
-    printf("Please load a distance table first.\n");
+    printf("Bitte laden Sie zuerst eine Entfernungstabelle.\n");
     return;
   }
 
-  setConsoleColor(COLOR_DEFAULT);
-  printf("Please enter the name of the first city:\n");
+  bool invalid;
   char firstCity[100];
-  scanf("%s", firstCity);
-
-  int firstCityNumber = getCityNumber(distanceTable, firstCity);
-  if (firstCityNumber == -1) {
-    setConsoleColor(COLOR_ERROR);
-    printf("This city doesn't exist.\n");
-    return;
-  }
-
-  printf("\n");
-
-  printf("Please enter the name of the second city:\n");
   char secondCity[100];
-  scanf("%s", secondCity);
+  int firstCityNumber;
+  int secondCityNumber;
 
-  int secondCityNumber = getCityNumber(distanceTable, secondCity);
-  if (secondCityNumber == -1) {
-    setConsoleColor(COLOR_ERROR);
-    printf("This city doesn't exist.\n");
-    return;
-  }
+  do
+  {
+    do
+    {
+      invalid = false;
+      setConsoleColor(COLOR_DEFAULT);
+      printf("Bitte geben Sie den Namen der ersten Stadt ein:\n");
+      setConsoleColor(COLOR_PRIMARY);
+      scanf("%s", firstCity);
 
+      firstCityNumber = getCityNumber(distanceTable, firstCity);
+      if (firstCityNumber == -1) {
+        setConsoleColor(COLOR_ERROR);
+        printf("Diese Stadt konnte in der Entferungstabelle nicht gefunden werden.\n");
+        printf("Bitte versuchen Sie es erneut.\n\n");
+        invalid = true;
+        }
+      } while (invalid);
+
+    printf("\n");
+
+    do
+    {
+      setConsoleColor(COLOR_DEFAULT);
+      printf("Bitte geben Sie den Namen der zweiten Stadt ein:\n");
+      setConsoleColor(COLOR_PRIMARY);
+      scanf("%s", secondCity);
+
+      secondCityNumber = getCityNumber(distanceTable, secondCity);
+      if (secondCityNumber == -1) {
+        setConsoleColor(COLOR_ERROR);
+        printf("Diese Stadt konnte in der Entferungstabelle nicht gefunden werden.\n");
+        printf("Bitte versuchen Sie es erneut.\n\n");
+        invalid = true;
+      }
+    } while (invalid);
+
+    if (firstCityNumber == secondCityNumber)
+    {
+      setConsoleColor(COLOR_ERROR);
+      printf("Die Städte sind identisch. Bitte geben Sie verschiedene Städte an.\n\n");
+      invalid = true;
+    }
+    
+  } while (invalid);
+  
   printf("\n");
 
   Distance *firstToSecond = getDistanceStructBetweenCities(distanceTable, firstCityNumber, secondCityNumber);
   Distance *secondToFirst = getDistanceStructBetweenCities(distanceTable, secondCityNumber, firstCityNumber);
-  printf("Current distances:\n");
-  printf("%s to %s: %d\n", firstCity, secondCity, firstToSecond->dist);
-  printf("%s to %s: %d\n", secondCity, firstCity, secondToFirst->dist);
+  setConsoleColor(COLOR_DEFAULT);
+  printf("Aktuelle Entfernungen:\n");
+  printf("%s nach %s: %d\n", firstCity, secondCity, firstToSecond->dist);
+  printf("%s nach %s: %d\n", secondCity, firstCity, secondToFirst->dist);
   printf("\n");
 
-  bool invalid;
   int firstDist;
   int secondDist;
   char input[100];
-  // TODO Maybe put into a helper method
+  long newDistance;
 
   do {
     invalid = false;
-    printf("Please input a new distance for %s to %s\n", firstCity, secondCity);
+    printf("Bitte geben Sie eine neue Entfernung für die Strecke von %s nach %s ein:\n", firstCity, secondCity);
+    setConsoleColor(COLOR_PRIMARY);
     scanf("%s", input);
-    long int newDistance = strtol(input, NULL, 10);
+    newDistance = strtol(input, NULL, 10);
 
-    // Check for validity
-    if (newDistance < 0) {
-      printf("The distance must be positiv.\n");
-      invalid = true;
-    } else if (newDistance > INT_MAX) {
-      printf("The number is too big.\n");
-      invalid = true;
-    } else {
-      firstDist = (int)newDistance;
-    }
+    invalid = checkForInvalidDistance(newDistance);
+
   } while (invalid);
+  firstDist = (int)newDistance;
+
+  printf("\n");
 
   do {
     invalid = false;
-    printf("Please input a new distance for %s to %s\n", secondCity, firstCity);
+    setConsoleColor(COLOR_DEFAULT);
+    printf("Bitte gib eine neue Entfernung für die Strecke von %s nach %s ein:\n", secondCity, firstCity);
+    setConsoleColor(COLOR_PRIMARY);
     scanf("%s", input);
-    long int newDistance = strtol(input, NULL, 10);
+    newDistance = strtol(input, NULL, 10);
 
-    // Check for validity
-    if (newDistance < 0) {
-      printf("The distance must be positiv.\n");
-      invalid = true;
-    } else if (newDistance > INT_MAX) {
-      printf("The number is too big.\n");
-      invalid = true;
-    } else {
-      secondDist = (int)newDistance;
-    }
+    invalid = checkForInvalidDistance(newDistance);
+    
   } while (invalid);
+  secondDist = (int)newDistance;
 
   // Replace distances
   firstToSecond->dist = firstDist;
   secondToFirst->dist = secondDist;
-
-  printf("Success!");
+  
+  setConsoleColor(COLOR_SUCCESS);
+  printf("\n");
+  printf("Die Entfernung wurde erfolgreich geändert!\n");
 }
 
 void calculateShortestRoute() {

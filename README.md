@@ -83,7 +83,7 @@ Die Funktionen zu den sechs Menüpunkten sowie die `main`-Funktion sollen wie fo
 
 ### 1. [Download](https://code.visualstudio.com/) and install Visual Studio Code
 
-### 2. [Download](http://www.mingw.org/) and install MinGW ([Video](https://youtu.be/guM4XS43m4I?t=29))
+### 2. [Download](https://mingw.osdn.io) and install MinGW ([Video](https://youtu.be/guM4XS43m4I?t=29))
 
 You will need the following packages:
 
