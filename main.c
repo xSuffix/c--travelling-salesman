@@ -411,7 +411,8 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
     invalid = checkForInvalidDistance(newDistance);
 
     int c;
-    while ((c = fgetc(stdin)) != '\n' && c != EOF); // Flush stdin
+    while ((c = fgetc(stdin)) != '\n' && c != EOF)
+      ; // Flush stdin
   } while (invalid);
   firstDist = (int)newDistance;
 
@@ -428,7 +429,8 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
     invalid = checkForInvalidDistance(newDistance);
 
     int c;
-    while ((c = fgetc(stdin)) != '\n' && c != EOF); // Flush stdin
+    while ((c = fgetc(stdin)) != '\n' && c != EOF)
+      ; // Flush stdin
   } while (invalid);
   secondDist = (int)newDistance;
 
