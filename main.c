@@ -318,11 +318,11 @@ Distance *getDistanceStructBetweenCities(DistanceTable *distanceTable, int from,
 
 // This checks, if the entered distance is positive and fits into an Integer. So the Long can be safely typecasted to an Int.
 bool checkForInvalidDistance(long num) {
-  if (num < 1) {
+  if (num <= 0) {
     setConsoleColor(COLOR_ERROR);
-    printf("Die Entfernung muss größer als 0 sein.\n\n");
+    printf("Bitte geben Sie eine Zahl ein, die größer als 0 ist.\n\n");
     return true;
-  } else if (num > INT_MAX) {
+  } else if (num > INT_MAX) { // this doesn't work on windows, because the size of int and long is identical
     setConsoleColor(COLOR_ERROR);
     printf("Die Entfernung ist zu groß.\n\n");
     return true;
@@ -330,6 +330,7 @@ bool checkForInvalidDistance(long num) {
   return false;
 }
 
+// TODO: Handling for double values? Currently the decimal places are simply cut off.
 void changeDistanceBetweenCities(DistanceTable *distanceTable) {
   if (distanceTable->n == 0) {
     setConsoleColor(COLOR_ERROR);
@@ -397,18 +398,20 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
 
   int firstDist;
   int secondDist;
-  char input[100];
   long newDistance;
+  char *input[15];
 
   do {
     invalid = false;
     printf("Bitte geben Sie eine neue Entfernung für die Strecke von %s nach %s ein:\n", firstCity, secondCity);
     setConsoleColor(COLOR_PRIMARY);
-    scanf("%s", input);
+    scanf("%14s", input);
     newDistance = strtol(input, NULL, 10);
 
     invalid = checkForInvalidDistance(newDistance);
 
+    int c;
+    while ((c = fgetc(stdin)) != '\n' && c != EOF); // Flush stdin
   } while (invalid);
   firstDist = (int)newDistance;
 
@@ -419,11 +422,13 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
     setConsoleColor(COLOR_DEFAULT);
     printf("Bitte gib eine neue Entfernung für die Strecke von %s nach %s ein:\n", secondCity, firstCity);
     setConsoleColor(COLOR_PRIMARY);
-    scanf("%s", input);
+    scanf("%14s", input);
     newDistance = strtol(input, NULL, 10);
 
     invalid = checkForInvalidDistance(newDistance);
 
+    int c;
+    while ((c = fgetc(stdin)) != '\n' && c != EOF); // Flush stdin
   } while (invalid);
   secondDist = (int)newDistance;
 
