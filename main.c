@@ -399,7 +399,7 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
   int firstDist;
   int secondDist;
   long newDistance;
-  char *input[15];
+  char input[15];
 
   do {
     invalid = false;
