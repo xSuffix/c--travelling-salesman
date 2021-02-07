@@ -4,7 +4,7 @@
 // TODO: Offene Fragen:
 // - Soll die Datei, in die gespeichert und von der gelesen wird, immer mit .txt enden?
 
-#include <ctype.h> // iscntrl() isspace() Funktionen für ASCII-Zeichen
+#include <ctype.h> // iscntrl() isspace() tolower() Funktionen für ASCII-Zeichen
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>  // Ein- und Ausgabefunktionen
@@ -122,6 +122,21 @@ char *scanFilePath() {
   scanf(fmt, path);
   printf("\n");
   return path;
+}
+
+//Scan console for y/n input
+int scanBoolean() {
+  setConsoleColor(COLOR_PRIMARY);
+  char c;
+  while (1) {
+    c = tolower(getchar());
+    switch (c) {
+    case 'y':
+      return 1;
+    case 'n':
+      return 0;
+    }
+  }
 }
 
 // Load the distance table from a file
@@ -488,7 +503,15 @@ void calculateShortestRoute() {
   printf("calculate");
 }
 
-int exitProgram() {
+int exitProgram(int *unsavedChanges) {
+  if (*unsavedChanges > 0) {
+    setConsoleColor(COLOR_WARNING);
+    printf("An der Entfernungstabelle wurden %d ungesicherte Änderungen vorgenommen. Soll das Programm dennoch beendet werden? (y/n)\n", *unsavedChanges);
+    if (!scanBoolean()) {
+      return 0;
+    }
+    printf("\n");
+  }
   setConsoleColor(COLOR_DEFAULT);
   printf("Das Programm wurde beendet.\n");
   return 1;
@@ -507,6 +530,7 @@ int main() {
   SetConsoleOutputCP(65001); // Charset UTF-8
 #endif
 
+  int unsavedChanges = 0;
   DistanceTable *distanceTable = NULL;
   DistanceTable *tmpDistanceTable = NULL;
 
@@ -553,8 +577,9 @@ int main() {
       calculateShortestRoute();
       break;
     case 'f': {
-      if (exitProgram()) {
+      if (exitProgram(&unsavedChanges)) {
         freeDistanceTable(distanceTable);
+        return 0;
       }
       break;
     }
@@ -564,6 +589,5 @@ int main() {
       setConsoleColor(COLOR_ERROR);
       printf("\"%c\" ist keine gültige Eingabe.\n", c);
     }
-  } while (c != 'f');
-  return 0;
+  } while (1);
 }
