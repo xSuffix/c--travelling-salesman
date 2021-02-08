@@ -254,7 +254,7 @@ DistanceTable *loadData() {
   }
 }
 
-int saveData(DistanceTable *distanceTable) {
+int saveData(DistanceTable *distanceTable, int *unsavedChanges) {
   if (distanceTable) {
     setConsoleColor(COLOR_DEFAULT);
     printf("Unter welchem Namen soll die Datei gespeichert werden?\n");
@@ -280,6 +280,7 @@ int saveData(DistanceTable *distanceTable) {
         fprintf(fpointer, "\n");
       }
       fclose(fpointer);
+      *unsavedChanges = 0;
       setConsoleColor(COLOR_SUCCESS);
       printf("Die Entfernungstabelle wurde erfolgreich gespeichert! (%s)\n", path);
       free(path);
@@ -297,7 +298,7 @@ int saveData(DistanceTable *distanceTable) {
   return 0;
 }
 
-void showData(DistanceTable *distanceTable) { // TODO Print if there are unsaved changes
+void showData(DistanceTable *distanceTable) {
   if (distanceTable) {
     int largestCityNameLength = 0;
 
@@ -565,7 +566,7 @@ int main() {
       }
       break;
     case 'b':
-      saveData(distanceTable);
+      saveData(distanceTable, &unsavedChanges);
       break;
     case 'c':
       showData(distanceTable);
