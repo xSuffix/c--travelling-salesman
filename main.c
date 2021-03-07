@@ -505,7 +505,7 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
   printf("Die Entfernung wurde erfolgreich geändert!\n");
 }
 
-int addDistancesOfRoute(int *route, int stops, DistanceTable *distanceTable){
+int addDistancesOfRoute(int *route, int stops, DistanceTable *distanceTable) {
   /*
     Sums up the distances between all stops of a route
     --------------------------------------------------
@@ -513,17 +513,17 @@ int addDistancesOfRoute(int *route, int stops, DistanceTable *distanceTable){
    # Used by both functions to find a shortest way
    
   */
-  
-  int sum =0;
-  if(stops>1){
-    for(int i=0; i< stops-1;i++){
-      sum+=getDistanceStructBetweenCities(distanceTable, *(route+i), *(route+i+1))->dist;
+
+  int sum = 0;
+  if (stops > 1) {
+    for (int i = 0; i < stops - 1; i++) {
+      sum += getDistanceStructBetweenCities(distanceTable, *(route + i), *(route + i + 1))->dist;
     }
   }
   return sum;
 }
 
-void printRoute(DistanceTable *distanceTable, int *route, int routeLength, int stops){
+void printRoute(DistanceTable *distanceTable, int *route, int routeLength, int stops) {
   /*
     Outputs the shortest route and its length
     -----------------------------------------
@@ -534,10 +534,10 @@ void printRoute(DistanceTable *distanceTable, int *route, int routeLength, int s
   setConsoleColor(COLOR_INFO);
   printf("Route: ");
   setConsoleColor(COLOR_DEFAULT);
-  for(int j=0; j<stops-1;j++){
+  for (int j = 0; j < stops - 1; j++) {
     printf("%s - ", distanceTable->cities[route[j]]);
   }
-  printf("%s\n",distanceTable->cities[route[stops-1]]);
+  printf("%s\n", distanceTable->cities[route[stops - 1]]);
   setConsoleColor(COLOR_INFO);
   printf("Länge: ");
   setConsoleColor(COLOR_DEFAULT);
@@ -548,7 +548,7 @@ void printRoute(DistanceTable *distanceTable, int *route, int routeLength, int s
   printf("\r");
 }
 
-Way shortestWay(int stops, int *distances){
+Way shortestWay(int stops, int *distances) {
   /*
     Returns Way struct containing the shortest route and its length
     ---------------------------------------------------------------
@@ -556,18 +556,17 @@ Way shortestWay(int stops, int *distances){
 
   */
 
-  Way min={0, distances[0]};
-  for(int i=0; i<stops; i++){
-    if(distances[i]<min.length){
-      min.index=i;
-      min.length=distances[i];
+  Way min = {0, distances[0]};
+  for (int i = 0; i < stops; i++) {
+    if (distances[i] < min.length) {
+      min.index = i;
+      min.length = distances[i];
     }
   }
   return min;
 }
 
-void swap(int *a, int *b)
-{
+void swap(int *a, int *b) {
   /*
     Swap to Integer fields' values
     ------------------------------
@@ -580,8 +579,7 @@ void swap(int *a, int *b)
   *b = temp;
 }
 
-void permutationsOf(int *route, int startIndex, int endIndex, int *collectionIndex, int **routeCollection)
-{
+void permutationsOf(int *route, int startIndex, int endIndex, int *collectionIndex, int **routeCollection) {
   /*
     Creates all permutations of a given route
     -----------------------------------------
@@ -592,24 +590,22 @@ void permutationsOf(int *route, int startIndex, int endIndex, int *collectionInd
 
   */
 
-  if(startIndex==endIndex)
-  {
-    for(int j=0;j<endIndex+2; j++){
-      routeCollection[*collectionIndex][j]=route[j];
+  if (startIndex == endIndex) {
+    for (int j = 0; j < endIndex + 2; j++) {
+      routeCollection[*collectionIndex][j] = route[j];
     }
-    *collectionIndex+=1;
+    *collectionIndex += 1;
     return;
   }
   int i;
-  for(i=startIndex;i<=endIndex;i++)
-  {
-    swap((route+i), (route+startIndex));
-    permutationsOf(route, startIndex+1, endIndex, collectionIndex, routeCollection);
-    swap((route+i), (route+startIndex));
+  for (i = startIndex; i <= endIndex; i++) {
+    swap((route + i), (route + startIndex));
+    permutationsOf(route, startIndex + 1, endIndex, collectionIndex, routeCollection);
+    swap((route + i), (route + startIndex));
   }
 }
 
-int memberOfRoute(int *route, int cityIndex, int stops){
+int memberOfRoute(int *route, int cityIndex, int stops) {
   /*
     Checks whether cityIndex is in *route
     -------------------------------------
@@ -620,9 +616,8 @@ int memberOfRoute(int *route, int cityIndex, int stops){
 
   */
 
-  for (int i = 0; i < stops; i++)
-  {
-    if (route[i]==cityIndex+1){
+  for (int i = 0; i < stops; i++) {
+    if (route[i] == cityIndex + 1) {
       return 0;
     }
   }
@@ -642,36 +637,36 @@ void calculateShortestRoute(DistanceTable *distanceTable, int start) {
    # Determine shortest route and print it out
 
   */
-  
-  int possibleRoutesCount=1;
-  for (int i=1; i < distanceTable->n;i++){
-    possibleRoutesCount*=i;
+
+  int possibleRoutesCount = 1;
+  for (int i = 1; i < distanceTable->n; i++) {
+    possibleRoutesCount *= i;
   }
 
-  int **allRoutes= malloc(possibleRoutesCount*sizeof(int *)), *allRouteLengths=malloc(possibleRoutesCount*sizeof(int));
-  for (int i=0; i < possibleRoutesCount;i++){
-    allRoutes[i]=malloc(((distanceTable->n)+1)*sizeof(int));
+  int **allRoutes = malloc(possibleRoutesCount * sizeof(int *)), *allRouteLengths = malloc(possibleRoutesCount * sizeof(int));
+  for (int i = 0; i < possibleRoutesCount; i++) {
+    allRoutes[i] = malloc(((distanceTable->n) + 1) * sizeof(int));
   }
 
-  allRoutes[0][0]=start, allRoutes[0][distanceTable->n]=start;
+  allRoutes[0][0] = start, allRoutes[0][distanceTable->n] = start;
 
-  for (int arrayIndex = 1, city=0; arrayIndex < distanceTable->n; arrayIndex++, city++){
-    if(city!=start){
-      allRoutes[0][arrayIndex]=city;
-    }
-    else allRoutes[0][arrayIndex]=++city;
+  for (int arrayIndex = 1, city = 0; arrayIndex < distanceTable->n; arrayIndex++, city++) {
+    if (city != start) {
+      allRoutes[0][arrayIndex] = city;
+    } else
+      allRoutes[0][arrayIndex] = ++city;
   }
 
-  int permutationCollectionIndex =0;
-  permutationsOf(allRoutes[0],1,distanceTable->n-1,&permutationCollectionIndex,allRoutes);
+  int permutationCollectionIndex = 0;
+  permutationsOf(allRoutes[0], 1, distanceTable->n - 1, &permutationCollectionIndex, allRoutes);
 
-  for(int i=0;i<possibleRoutesCount;i++){
-    allRouteLengths[i]=addDistancesOfRoute(allRoutes[i],distanceTable->n+1,distanceTable);
+  for (int i = 0; i < possibleRoutesCount; i++) {
+    allRouteLengths[i] = addDistancesOfRoute(allRoutes[i], distanceTable->n + 1, distanceTable);
   }
 
-  Way shortest = shortestWay(possibleRoutesCount,allRouteLengths);
+  Way shortest = shortestWay(possibleRoutesCount, allRouteLengths);
 
-  printRoute(distanceTable, allRoutes[shortest.index],shortest.length, distanceTable->n+1);
+  printRoute(distanceTable, allRoutes[shortest.index], shortest.length, distanceTable->n + 1);
 }
 
 void guessShortestRoute(DistanceTable *distanceTable, int start) {
@@ -688,36 +683,31 @@ void guessShortestRoute(DistanceTable *distanceTable, int start) {
    # Printing of route and distance
      
   */
-  
-  int *route = malloc((distanceTable->n+1)*sizeof(int));
-  route[0]=start+1;
-  route[distanceTable->n]=start+1;
 
-  for(int i=1; i<distanceTable->n; i++){
-    int distance =0, index=0;
-    for (int j=0;j<distanceTable->n;j++){
-      if ((distance==0) && ((route[i-1]-1)!=j)
-      && (memberOfRoute(route,j,distanceTable->n))
-      && (getDistanceStructBetweenCities(distanceTable,route[i-1]-1,j)->dist>0)) {
-        distance=getDistanceStructBetweenCities(distanceTable,route[i-1]-1,j)->dist;
-        index=j;
-      }
-      else if (((route[i-1]-1)!=j) && (memberOfRoute(route,j,distanceTable->n))
-      && (getDistanceStructBetweenCities(distanceTable,route[i-1]-1,j)->dist<distance)
-      && (getDistanceStructBetweenCities(distanceTable,route[i-1]-1,j)->dist>0)) {
-        distance=getDistanceStructBetweenCities(distanceTable,route[i-1]-1,j)->dist;
-        index=j;
+  int *route = malloc((distanceTable->n + 1) * sizeof(int));
+  route[0] = start + 1;
+  route[distanceTable->n] = start + 1;
+
+  for (int i = 1; i < distanceTable->n; i++) {
+    int distance = 0, index = 0;
+    for (int j = 0; j < distanceTable->n; j++) {
+      if ((distance == 0) && ((route[i - 1] - 1) != j) && (memberOfRoute(route, j, distanceTable->n)) && (getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist > 0)) {
+        distance = getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist;
+        index = j;
+      } else if (((route[i - 1] - 1) != j) && (memberOfRoute(route, j, distanceTable->n)) && (getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist < distance) && (getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist > 0)) {
+        distance = getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist;
+        index = j;
       }
     }
-    route[i]=index+1;
+    route[i] = index + 1;
   }
-  for (int x =0;x<distanceTable->n+1;x++){
-    route[x]-=1;
+  for (int x = 0; x < distanceTable->n + 1; x++) {
+    route[x] -= 1;
   }
 
-  int length=addDistancesOfRoute(route,distanceTable->n+1,distanceTable);
+  int length = addDistancesOfRoute(route, distanceTable->n + 1, distanceTable);
 
-  printRoute(distanceTable, route,length, distanceTable->n+1);
+  printRoute(distanceTable, route, length, distanceTable->n + 1);
 }
 
 void shortestRouteInit(DistanceTable *distanceTable) {
@@ -732,7 +722,7 @@ void shortestRouteInit(DistanceTable *distanceTable) {
      - should only matter for nearest-neighbor-calculation
    # Calculates distance and route in the requested way, passes starting city
 
-  */  
+  */
 
   if (distanceTable->n == 0) {
     setConsoleColor(COLOR_ERROR);
@@ -774,8 +764,10 @@ void shortestRouteInit(DistanceTable *distanceTable) {
   printf("\n");
 
   //ausgewählter Berechnungsansatz
-  if(yesno!=0) calculateShortestRoute(distanceTable, startCityNumber);
-  else guessShortestRoute(distanceTable, startCityNumber);
+  if (yesno != 0)
+    calculateShortestRoute(distanceTable, startCityNumber);
+  else
+    guessShortestRoute(distanceTable, startCityNumber);
 }
 
 int exitProgram(int *unsavedChanges) {
