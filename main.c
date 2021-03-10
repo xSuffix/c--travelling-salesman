@@ -51,6 +51,58 @@ typedef struct {
   int length;
 } Way;
 
+void setConsoleColor(int color);
+
+void freeDistanceTable(DistanceTable *distanceTable);
+
+int intDigits(int n);
+
+int strlen_utf8(char *s);
+
+char *substr_utf8(const char *src, size_t min, size_t max, char filler);
+
+char *scanFilePath();
+
+int scanBoolean();
+
+DistanceTable *loadData();
+
+int saveData(DistanceTable *distanceTable, int *unsavedChanges);
+
+void showData(DistanceTable *distanceTable);
+
+int getCityNumber(DistanceTable *distanceTable, char city[100]);
+
+Distance *getDistanceStructBetweenCities(DistanceTable *distanceTable, int from, int to);
+
+bool checkForInvalidDistance(long num);
+
+void changeDistanceBetweenCities(DistanceTable *distanceTable, int *unsavedChanges);
+
+int addDistancesOfRoute(int *route, int stops, DistanceTable *distanceTable);
+
+void printRoute(DistanceTable *distanceTable, int *route, int routeLength, int stops);
+
+Way shortestWay(int stops, int *distances);
+
+void swap(int *a, int *b);
+
+void permutationsOf(int *route, int startIndex, int endIndex, int *collectionIndex, int **routeCollection);
+
+int memberOfRoute(int *route, int cityIndex, int stops);
+
+void calculateShortestRoute(DistanceTable *distanceTable, int start);
+
+void guessShortestRoute(DistanceTable *distanceTable, int start);
+
+void shortestRouteInit(DistanceTable *distanceTable);
+
+int exitProgram(int *unsavedChanges);
+
+void printMenu(Menu *menu, int length);
+
+int main();
+
 // Portable function for changing the console color
 void setConsoleColor(int color) {
 #ifdef _WIN32
@@ -360,6 +412,13 @@ void showData(DistanceTable *distanceTable) {
   }
 }
 
+/**
+ * @brief Get the index of the city in the distanceTable (if it's in the distanceTable)
+ * 
+ * @param distanceTable 
+ * @param city
+ * @return int  Returns the index of the city in the distanceTable. Returns -1 if city was not found.
+ */
 int getCityNumber(DistanceTable *distanceTable, char city[100]) {
   for (int i = 0; i < distanceTable->n; i++) {
     if (strcmp(distanceTable->cities[i], city) == 0) {
@@ -369,6 +428,14 @@ int getCityNumber(DistanceTable *distanceTable, char city[100]) {
   return -1; // City was not found
 }
 
+/**
+ * @brief Get the Pointer to the Distance Struct Between "from" and "to"
+ * 
+ * @param distanceTable 
+ * @param from          The index of the city to go from
+ * @param to            The index of the city to go to
+ * @return Distance* 
+ */
 Distance *getDistanceStructBetweenCities(DistanceTable *distanceTable, int from, int to) {
   for (int i = 0; i < distanceTable->n * distanceTable->n - 1; i++) {
     if (from == distanceTable->distances[i].from && to == distanceTable->distances[i].to)
@@ -378,7 +445,16 @@ Distance *getDistanceStructBetweenCities(DistanceTable *distanceTable, int from,
   return 0;
 }
 
-// This checks, if the entered distance is positive and fits into an Integer. So the Long can be safely typecasted to an Int.
+
+/**
+ * 
+ * @brief This checks, if the entered distance is positive and fits into an Integer. 
+ *        So the Long can be safely typecasted to an Int.
+ * 
+ * @param num     Distance
+ * @return true   The provided distance is invalid.
+ * @return false  The provided distance is valid.
+ */
 bool checkForInvalidDistance(long num) {
   if (num <= 0) {
     setConsoleColor(COLOR_ERROR);
@@ -393,8 +469,15 @@ bool checkForInvalidDistance(long num) {
 }
 
 // TODO: Handling for double values? Currently the decimal places are simply cut off.
-void changeDistanceBetweenCities(DistanceTable *distanceTable) {
-  if (distanceTable->n == 0) {
+/**
+ * @brief This function changes the distance between to cities. 
+ *        The new distances are provided from the user.
+ * 
+ * @param distanceTable 
+ * @param unsavedChanges increments if a distance is changed
+ */
+void changeDistanceBetweenCities(DistanceTable *distanceTable, int *unsavedChanges) {
+  if (distanceTable == NULL) {
     setConsoleColor(COLOR_ERROR);
     printf("Bitte laden Sie zuerst eine Entfernungstabelle.\n");
     return;
@@ -406,6 +489,7 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
   int firstCityNumber;
   int secondCityNumber;
 
+  // Get the city names from the user and check them.
   do {
     do {
       invalid = false;
@@ -426,6 +510,7 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
     printf("\n");
 
     do {
+      invalid = false;
       setConsoleColor(COLOR_DEFAULT);
       printf("Bitte geben Sie den Namen der zweiten Stadt ein:\n");
       setConsoleColor(COLOR_PRIMARY);
@@ -434,7 +519,7 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
       secondCityNumber = getCityNumber(distanceTable, secondCity);
       if (secondCityNumber == -1) {
         setConsoleColor(COLOR_ERROR);
-        printf("Diese Stadt konnte in der Entferungstabelle nicht gefunden werden.\n");
+        printf("Diese Stadt konnte in der Entfernungstabelle nicht gefunden werden.\n");
         printf("Bitte versuchen Sie es erneut.\n\n");
         invalid = true;
       }
@@ -463,8 +548,10 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
   long newDistance;
   char input[15];
 
+  // Get the new distances from the user and check them.
   do {
     invalid = false;
+    setConsoleColor(COLOR_DEFAULT);
     printf("Bitte geben Sie eine neue Entfernung für die Strecke von %s nach %s ein:\n", firstCity, secondCity);
     setConsoleColor(COLOR_PRIMARY);
     scanf("%14s", input);
@@ -473,8 +560,7 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
     invalid = checkForInvalidDistance(newDistance);
 
     int c;
-    while ((c = fgetc(stdin)) != '\n' && c != EOF)
-      ; // Flush stdin
+    while ((c = fgetc(stdin)) != '\n' && c != EOF); // Flush stdin
   } while (invalid);
   firstDist = (int)newDistance;
 
@@ -483,7 +569,7 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
   do {
     invalid = false;
     setConsoleColor(COLOR_DEFAULT);
-    printf("Bitte gib eine neue Entfernung für die Strecke von %s nach %s ein:\n", secondCity, firstCity);
+    printf("Bitte geben Sie eine neue Entfernung für die Strecke von %s nach %s ein:\n", secondCity, firstCity);
     setConsoleColor(COLOR_PRIMARY);
     scanf("%14s", input);
     newDistance = strtol(input, NULL, 10);
@@ -491,14 +577,20 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable) {
     invalid = checkForInvalidDistance(newDistance);
 
     int c;
-    while ((c = fgetc(stdin)) != '\n' && c != EOF)
-      ; // Flush stdin
+    while ((c = fgetc(stdin)) != '\n' && c != EOF); // Flush stdin
   } while (invalid);
   secondDist = (int)newDistance;
 
   // Replace distances
-  firstToSecond->dist = firstDist;
-  secondToFirst->dist = secondDist;
+  if (firstToSecond->dist != firstDist) {
+    firstToSecond->dist = firstDist;
+    *unsavedChanges+=1;
+  }
+
+  if (secondToFirst->dist != secondDist) {
+    secondToFirst->dist = secondDist;
+    *unsavedChanges+=1;
+  }
 
   setConsoleColor(COLOR_SUCCESS);
   printf("\n");
@@ -838,7 +930,7 @@ int main() {
       showData(distanceTable);
       break;
     case 'd':
-      changeDistanceBetweenCities(distanceTable);
+      changeDistanceBetweenCities(distanceTable, &unsavedChanges);
       break;
     case 'e':
       //calculateShortestRoute(distanceTable);
