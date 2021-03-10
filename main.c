@@ -445,7 +445,6 @@ Distance *getDistanceStructBetweenCities(DistanceTable *distanceTable, int from,
   return 0;
 }
 
-
 /**
  * 
  * @brief This checks, if the entered distance is positive and fits into an Integer. 
@@ -560,7 +559,8 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable, int *unsavedChang
     invalid = checkForInvalidDistance(newDistance);
 
     int c;
-    while ((c = fgetc(stdin)) != '\n' && c != EOF); // Flush stdin
+    while ((c = fgetc(stdin)) != '\n' && c != EOF)
+      ; // Flush stdin
   } while (invalid);
   firstDist = (int)newDistance;
 
@@ -577,19 +577,20 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable, int *unsavedChang
     invalid = checkForInvalidDistance(newDistance);
 
     int c;
-    while ((c = fgetc(stdin)) != '\n' && c != EOF); // Flush stdin
+    while ((c = fgetc(stdin)) != '\n' && c != EOF)
+      ; // Flush stdin
   } while (invalid);
   secondDist = (int)newDistance;
 
   // Replace distances
   if (firstToSecond->dist != firstDist) {
     firstToSecond->dist = firstDist;
-    *unsavedChanges+=1;
+    *unsavedChanges += 1;
   }
 
   if (secondToFirst->dist != secondDist) {
     secondToFirst->dist = secondDist;
-    *unsavedChanges+=1;
+    *unsavedChanges += 1;
   }
 
   setConsoleColor(COLOR_SUCCESS);
