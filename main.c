@@ -1,8 +1,13 @@
 // Kurs INF20A
 // Bearbeiter: Jan Fröhlich, Gabriel Nill, Fabian Weller
 
-// TODO: Offene Fragen:
-// - Soll die Datei, in die gespeichert und von der gelesen wird, immer mit .txt enden?
+//  TODO: Offene Fragen:
+//  - Soll die Datei, in die gespeichert und von der gelesen wird, immer mit .txt enden?
+//  TODO: Zusammenführung Stadt-Eingabe-Methoden (Wird in mindestens zwei Funktionen gemacht)
+//  TODO: (Gabriel) Bessere Lesbarkeit code, Reduktion Parameter
+//  TODO: Allokierungen prüfen -> free(xyz), wo noch nötig
+// [TODO: (Gabriel) Überarbeitung Routenkalkulation] * aber prinzipiell nicht notwendig *
+//  TODO: Testen!!
 
 #include <ctype.h> // iscntrl() isspace() tolower() Funktionen für ASCII-Zeichen
 #include <limits.h>
@@ -598,6 +603,15 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable, int *unsavedChang
   printf("Die Entfernung wurde erfolgreich geändert!\n");
 }
 
+/**
+ * 
+ * @brief Sums up all distances between the stops of a route
+ * 
+ * @param *route The indices of the stops of the route  
+ * @param stops The stop count of the provided route
+ * @param *distanceTable The loaded DistanceTable, for reference
+ * @return sum - The total distance of the route
+ */
 int addDistancesOfRoute(int *route, int stops, DistanceTable *distanceTable) {
   /*
     Sums up the distances between all stops of a route
@@ -616,6 +630,15 @@ int addDistancesOfRoute(int *route, int stops, DistanceTable *distanceTable) {
   return sum;
 }
 
+/**
+ * 
+ * @brief Prints the provided route and its length to the console
+ * 
+ * @param *distanceTable The loaded DistanceTable, for reference
+ * @param *route The indices of the stops of the route 
+ * @param routeLength The total distance of the provided route
+ * @param stops The stop count of the provided route
+ */
 void printRoute(DistanceTable *distanceTable, int *route, int routeLength, int stops) {
   /*
     Outputs the shortest route and its length
@@ -641,6 +664,14 @@ void printRoute(DistanceTable *distanceTable, int *route, int routeLength, int s
   printf("\r");
 }
 
+/**
+ * 
+ * @brief Prints the provided route and its length to the console
+ * 
+ * @param *distances The array containing the total distance for each route
+ * @param stops The stop count of the provided route
+ * @return min - Way struct containing the shortest route and its length
+ */
 Way shortestWay(int stops, int *distances) {
   /*
     Returns Way struct containing the shortest route and its length
@@ -659,6 +690,13 @@ Way shortestWay(int stops, int *distances) {
   return min;
 }
 
+/**
+ * 
+ * @brief Swaps to integer fields' values
+ * 
+ * @param *a The address of the first int
+ * @param *b The address of the second int
+ */
 void swap(int *a, int *b) {
   /*
     Swap to Integer fields' values
@@ -671,7 +709,16 @@ void swap(int *a, int *b) {
   *a = *b;
   *b = temp;
 }
-
+/**
+ * 
+ * @brief Recursive algorithm to create all permutations of a given section of an array and save them to a two-dimensional array
+ * 
+ * @param *route The given array: its permutations will be created
+ * @param startIndex Starting index for the section to permutate
+ * @param endIndex Ending index for the section to permutate
+ * @param *collectionIndex Pointer to the index counting up the 2-dimensional array, as index is in calling method
+ * @param **routeCollection The 2-dimensional array that is to be filled with permutations
+ */
 void permutationsOf(int *route, int startIndex, int endIndex, int *collectionIndex, int **routeCollection) {
   /*
     Creates all permutations of a given route
@@ -698,6 +745,17 @@ void permutationsOf(int *route, int startIndex, int endIndex, int *collectionInd
   }
 }
 
+// TODO this entire function is a literal code smell, shame is real
+/**
+ * 
+ * @brief Checks, whether a given city is part of a given route. Here the city's index will be incremented to avoid
+ * interactions between index 0 and 0 initializations. All indices in the array are 1 higher, so there is no index 0 any more.
+ * 
+ * @param *route The given route with all of its current members' indices being increased by 1
+ * @param cityIndex The index of the city to perform check on
+ * @param stops Total stops count for the given route
+ * @return 1 / true - if cityIndex is NOT in route
+ */
 int memberOfRoute(int *route, int cityIndex, int stops) {
   /*
     Checks whether cityIndex is in *route
@@ -717,6 +775,14 @@ int memberOfRoute(int *route, int cityIndex, int stops) {
   return 1;
 }
 
+/**
+ * 
+ * @brief Calculates and prints out the exact total distance of the shortest route using a permutation 
+ * generator to find all possible fitting routes and compares those afterwards
+ * 
+ * @param *distanceTable The loaded DistanceTable, for reference
+ * @param start The index of the starting city for the route - no impact on resulting route
+ */
 void calculateShortestRoute(DistanceTable *distanceTable, int start) {
   /*
     Method: Exact Calculation
@@ -762,6 +828,13 @@ void calculateShortestRoute(DistanceTable *distanceTable, int start) {
   printRoute(distanceTable, allRoutes[shortest.index], shortest.length, distanceTable->n + 1);
 }
 
+/**
+ * 
+ * @brief Heuristic way to estimate the shortest route, using the Nearest-Neighbor-Method
+ * 
+ * @param *distanceTable The loaded DistanceTable, for reference
+ * @param start The index of the starting city for the route, basically determines resulting route
+ */
 void guessShortestRoute(DistanceTable *distanceTable, int start) {
   /*
     Method: Nearest Neighbor
@@ -803,6 +876,13 @@ void guessShortestRoute(DistanceTable *distanceTable, int start) {
   printRoute(distanceTable, route, length, distanceTable->n + 1);
 }
 
+/**
+ * 
+ * @brief Initializes the route calculation and calls the required function. 
+ * Takes in the input for the starting city and the used way to find the route
+ * 
+ * @param *distanceTable The loaded DistanceTable, for reference
+ */
 void shortestRouteInit(DistanceTable *distanceTable) {
   /*
     Initialization for Route Calculation
