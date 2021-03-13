@@ -214,7 +214,7 @@ char *scanFilePath() {
   setConsoleColor(COLOR_PRIMARY);
   char *path = calloc(PATH_MAX, sizeof(char));
   char fmt[64];
-  snprintf(fmt, sizeof fmt, "%%%ds", PATH_MAX - 1);
+  snprintf(fmt, sizeof fmt, " %%%d[^\n]", PATH_MAX - 1);
   scanf(fmt, path);
   printf("\n");
   return path;
