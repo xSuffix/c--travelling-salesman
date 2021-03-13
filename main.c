@@ -117,6 +117,7 @@ void setConsoleColor(int color) {
 #endif
 }
 
+// Free memory of a DistanceTable
 void freeDistanceTable(DistanceTable *distanceTable) {
   if (distanceTable) {
     if (distanceTable->cities) {
@@ -132,7 +133,7 @@ void freeDistanceTable(DistanceTable *distanceTable) {
   }
 }
 
-// Return amount of digits in integer (0 => 1, 53 => 2, 1234 => 4)
+// Return amount of digits in an integer (0 => 1, 53 => 2, 1234 => 4)
 int intDigits(int n) {
   if (n < 0)
     return intDigits(-n);
@@ -143,32 +144,32 @@ int intDigits(int n) {
 
 // Return length of string with support for UTF-8 (ö counts as one character)
 int strlen_utf8(char *s) {
-  int i = 0, j = 0;
-  while (s[i]) {
-    if ((s[i] & 0xc0) != 0x80)
-      j++;
-    i++;
+  int bytes = 0, chars = 0;
+  while (s[bytes]) {
+    if ((s[bytes] & 0xc0) != 0x80)
+      chars++;
+    bytes++;
   }
-  return j;
+  return chars;
 }
 
 // Norm a string to a specific minimum/maximum length with support for UTF-8
-// If string is smaller than minimum, fill the rest with the filler char. If it's larger, crop
+// If string is smaller than minimum, fill the rest with the filler char. If it's larger, crop.
 // Free substr after using this function!
 char *substr_utf8(const char *src, size_t min, size_t max, char filler) {
-  size_t i = 0, j = 0;
-  while (j < max && src[i]) {
-    if ((src[i] & 0xc0) != 0x80)
-      j++;
-    i++;
+  size_t bytes = 0, chars = 0;
+  while (chars < max && src[bytes]) {
+    if ((src[bytes] & 0xc0) != 0x80)
+      chars++;
+    bytes++;
   }
 
-  size_t strlen = j > min ? i : min + i - j;
+  size_t strlen = chars > min ? bytes : min + bytes - chars;
   char *substr = calloc(strlen + 1, sizeof(char));
-  memcpy(substr, &src[0], i);
+  memcpy(substr, src, bytes);
   substr[strlen] = '\0';
 
-  for (int k = 0; min > k + j; k++) {
+  for (int fillerChars = 0; min > fillerChars + chars; fillerChars++) {
     strncat(substr, &filler, 1);
   }
   return substr;
@@ -207,7 +208,7 @@ DistanceTable *loadData() {
   distanceTable->n = 0;
   distanceTable->cities = NULL;
 
-  // Retrieve path to file
+  // Retrieve path of file
   setConsoleColor(COLOR_DEFAULT);
   printf("Bitte geben Sie den Pfad zu der Textdatei an, die geladen werden soll.\n");
   char *path = scanFilePath();
@@ -228,7 +229,6 @@ DistanceTable *loadData() {
     char *line = NULL;
     size_t len = 0;
     int memcycle = 8;
-
     // Read city names from first line and store them in distanceTable->cities
     if (getline(&line, &len, fpointer) > 0) {
       for (char *city = strtok(line, "\n "); city != NULL; city = strtok(NULL, "\n ")) {
@@ -364,9 +364,8 @@ void showData(DistanceTable *distanceTable) {
   if (distanceTable) {
     int largestCityNameLength = 0;
 
-    // Initialize length of column (in chars) with minimum value of 3 // TODO change to array
-    int *columnLengths;
-    columnLengths = calloc(distanceTable->n, sizeof(int));
+    // Initialize length of column (in chars) with minimum value of 3
+    int columnLengths[distanceTable->n];
     for (int i = 0; i < distanceTable->n; i++) {
       columnLengths[i] = 3;
     }
@@ -385,8 +384,8 @@ void showData(DistanceTable *distanceTable) {
       }
     }
 
-    // Print title row
-    printf("%*s", largestCityNameLength + 1, ""); // Margin for the first line
+    // Print table head
+    printf("%*s", largestCityNameLength + 1, ""); // Print margin for the first line
     setConsoleColor(COLOR_INFO);
     for (int i = 0; i < distanceTable->n; i++) {
       // Print titles of columns
@@ -396,7 +395,7 @@ void showData(DistanceTable *distanceTable) {
     }
     printf("\n");
 
-    // Print rows except for title row
+    // Print table body
     for (int i = 0; i < distanceTable->n; i++) {
       setConsoleColor(COLOR_INFO);
       // Print titles of rows with margin, so that the entire row has the same width
@@ -410,7 +409,6 @@ void showData(DistanceTable *distanceTable) {
       }
       printf("\n");
     }
-    free(columnLengths);
   } else {
     setConsoleColor(COLOR_WARNING);
     printf("Die Entfernungstabelle ist leer.\n");
