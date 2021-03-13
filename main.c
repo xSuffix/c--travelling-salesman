@@ -108,7 +108,12 @@ void printMenu(Menu *menu, int length);
 
 int main();
 
-// Portable function for changing the console color
+/**
+ * @brief Portable function for changing the console color.
+ * 
+ * @param color Color code depending on the terminal. Use color macros for unified look on Windows and Linux.
+ * @see COLOR_DEFAULT COLOR_PRIMARY COLOR_SUCCESS COLOR_INFO COLOR_WARNING COLOR_ERROR
+ */
 void setConsoleColor(int color) {
 #ifdef _WIN32
   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
@@ -117,7 +122,11 @@ void setConsoleColor(int color) {
 #endif
 }
 
-// Free memory of a DistanceTable
+/**
+ * @brief Free memory of a DistanceTable.
+ * 
+ * @param distanceTable DistanceTable whose memory is to be freed.
+ */
 void freeDistanceTable(DistanceTable *distanceTable) {
   if (distanceTable) {
     if (distanceTable->cities) {
@@ -133,7 +142,12 @@ void freeDistanceTable(DistanceTable *distanceTable) {
   }
 }
 
-// Return amount of digits in an integer (0 => 1, 53 => 2, 1234 => 4)
+/**
+ * @brief Get amount of digits of an integer (0 => 1, -53 => 2, 1234 => 4).
+ * 
+ * @param n any integer
+ * @return Number of digits of the integer n.
+ */
 int intDigits(int n) {
   if (n < 0)
     return intDigits(-n);
@@ -142,7 +156,13 @@ int intDigits(int n) {
   return 1 + intDigits(n / 10);
 }
 
-// Return length of string with support for UTF-8 (ö counts as one character)
+/**
+ * @brief   Get length of a string.
+ * @details This function takes into account that unicode characters can consist of more than one byte.
+ * 
+ * @param s Any string to count the length of.
+ * @return  Length of string s.
+ */
 int strlen_utf8(char *s) {
   int bytes = 0, chars = 0;
   while (s[bytes]) {
@@ -153,9 +173,19 @@ int strlen_utf8(char *s) {
   return chars;
 }
 
-// Norm a string to a specific minimum/maximum length with support for UTF-8
-// If string is smaller than minimum, fill the rest with the filler char. If it's larger, crop.
-// Free substr after using this function!
+/**
+ * @brief   Norm a string to a specific minimum/maximum length with support for unicode.
+ * @details If string length is smaller than min, fill the rest with the filler char. If it's larger than max, crop.
+ *          This function takes into account that unicode characters can consist of more than one byte.
+ * 
+ * @param src     String which should be normed.
+ * @param min     Minimum length of output string.
+ * @param max     Maximum length of output string.
+ * @param filler  Character to append if the string length is smaller than min.
+ * @return A pointer to the normed string.
+ * 
+ * @attention Return value needs to be freed when no longer needed.
+ */
 char *substr_utf8(const char *src, size_t min, size_t max, char filler) {
   size_t bytes = 0, chars = 0;
   while (chars < max && src[bytes]) {
@@ -175,8 +205,11 @@ char *substr_utf8(const char *src, size_t min, size_t max, char filler) {
   return substr;
 }
 
-// Scan console for a file path and return it
-// Free path after using this function!
+/**
+ * @brief Scan console for a file path.
+ * @return File path entered by user.
+ * @attention Return value needs to be freed when no longer needed.
+ */
 char *scanFilePath() {
   setConsoleColor(COLOR_PRIMARY);
   char *path = calloc(PATH_MAX, sizeof(char));
@@ -187,7 +220,10 @@ char *scanFilePath() {
   return path;
 }
 
-//Scan console for y/n input
+/**
+ * @brief Scan console for y/n input.
+ * @return 1 for yes or 0 for no.
+ */
 int scanBoolean() {
   setConsoleColor(COLOR_PRIMARY);
   char c;
@@ -202,13 +238,16 @@ int scanBoolean() {
   }
 }
 
-// Load the distance table from a file
+/**
+ * @brief Load the distance table from a file.
+ * @return A Pointer to the DistanceTable. 
+ * @attention Return value needs to be freed when no longer needed, see freeDistanceTable().
+ */
 DistanceTable *loadData() {
   DistanceTable *distanceTable = malloc(sizeof(DistanceTable));
   distanceTable->n = 0;
   distanceTable->cities = NULL;
 
-  // Retrieve path of file
   setConsoleColor(COLOR_DEFAULT);
   printf("Bitte geben Sie den Pfad zu der Textdatei an, die geladen werden soll.\n");
   char *path = scanFilePath();
@@ -229,7 +268,7 @@ DistanceTable *loadData() {
     char *line = NULL;
     size_t len = 0;
     int memcycle = 8;
-    // Read city names from first line and store them in distanceTable->cities
+    // Read city names from first line of file and store them in distanceTable->cities
     if (getline(&line, &len, fpointer) > 0) {
       for (char *city = strtok(line, "\n "); city != NULL; city = strtok(NULL, "\n ")) {
         // Allocate memory for char pointers every (memcycle)th step/word
@@ -272,8 +311,8 @@ DistanceTable *loadData() {
             return NULL;
           }
           // Check if distance is valid
-          int dist = strtol(distString, NULL, 0); // TODO A character will be interpreted as 0 - is that okay?
-          if (from == to) {                       // Start city == destination (diagonal line in file)
+          int dist = strtol(distString, NULL, 0);
+          if (from == to) {
             if (dist != 0) {
               setConsoleColor(COLOR_ERROR);
               printf("Fehler beim Einlesen: Die Entfernung einer Stadt zu sich selbst muss immer 0 sein, in der Datei steht jedoch \"%s\" (%u. Zeile, %u. Wort).\n", distString, from + 2, to + 1);
@@ -316,6 +355,13 @@ DistanceTable *loadData() {
   }
 }
 
+/**
+ * @brief Save DistanceTable to a file.
+ * 
+ * @param distanceTable  Pointer to DistanceTable which should be saved.
+ * @param unsavedChanges Variable which keeps track of unsaved changes, will be set to 0 if saved sucessfully.
+ * @return 1 if the file was saved, 0 if it was not.
+ */
 int saveData(DistanceTable *distanceTable, int *unsavedChanges) {
   if (distanceTable) {
     setConsoleColor(COLOR_DEFAULT);
@@ -360,6 +406,10 @@ int saveData(DistanceTable *distanceTable, int *unsavedChanges) {
   return 0;
 }
 
+/**
+ * @brief Prints DistanceTable * 
+ * @param distanceTable DistanceTable which should be printed.
+ */
 void showData(DistanceTable *distanceTable) {
   if (distanceTable) {
     int largestCityNameLength = 0;
@@ -941,6 +991,12 @@ void shortestRouteInit(DistanceTable *distanceTable) {
     guessShortestRoute(distanceTable, startCityNumber);
 }
 
+/**
+ * @brief Checks if program can be terminated savely (no unsaved changes).
+ * 
+ * @param unsavedChanges Pointer to the integer that keeps track of unsaved changes.
+ * @return 1 if program can be terminated, else 0.
+ */
 int exitProgram(int *unsavedChanges) {
   if (*unsavedChanges > 0) {
     setConsoleColor(COLOR_WARNING);
@@ -955,7 +1011,12 @@ int exitProgram(int *unsavedChanges) {
   return 1;
 }
 
-// Print all options of a menu
+/**
+ * @brief Print all options of a menu.
+ * 
+ * @param menu   Pointer to the the menu.
+ * @param length Amount of options of the menu.
+ */
 void printMenu(Menu *menu, int length) {
   printf("\n");
   for (int i = 0; i < length; i++) {
@@ -963,6 +1024,10 @@ void printMenu(Menu *menu, int length) {
   }
 }
 
+/**
+ * @brief Print menu, let user run predefined functions.
+ * @return 0 if the function has been safely exited.
+ */
 int main() {
 #ifdef _WIN32
   SetConsoleOutputCP(65001); // Charset UTF-8
@@ -982,7 +1047,6 @@ int main() {
   };
   int startMenuLength = sizeof(startMenu) / sizeof(startMenu[0]);
 
-  // Build menu
   char c;
   do {
     setConsoleColor(COLOR_DEFAULT);
