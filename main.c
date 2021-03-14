@@ -9,7 +9,7 @@ Bearbeiter: Jan Fröhlich, Gabriel Nill, Fabian Weller
 #include <stdbool.h>
 #include <stdio.h>  // Ein- und Ausgabefunktionen
 #include <stdlib.h> // Stringkonvertierung, Zufallszahlen, Speicherallokation, Sortieren u.a.
-#include <string.h> // prototype for strtok() because gcc expects int as return type
+#include <string.h>
 
 #ifdef _WIN32
 #include <windows.h>
