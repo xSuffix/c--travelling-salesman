@@ -94,7 +94,7 @@ void swap(int *a, int *b);
 
 void permutationsOf(int *route, int startIndex, int endIndex, int *collectionIndex, int **routeCollection);
 
-int memberOfRoute(int *route, int cityIndex, int stops);
+int notMemberOfRoute(int *route, int cityIndex, int stops);
 
 void calculateShortestRoute(DistanceTable *distanceTable, int start);
 
@@ -691,10 +691,6 @@ void printRoute(DistanceTable *distanceTable, int *route, int routeLength, int s
   printf("Länge: ");
   setConsoleColor(COLOR_DEFAULT);
   printf("%dkm\n\n", routeLength);
-  printf("Press any key to continue...");
-  getchar();
-  getchar();
-  printf("\r");
 }
 
 /**
@@ -755,7 +751,6 @@ void permutationsOf(int *route, int startIndex, int endIndex, int *collectionInd
   }
 }
 
-// TODO this entire function is a literal code smell, shame is real
 /**
  * 
  * @brief Checks, whether a given city is part of a given route. Here the city's index will be incremented to avoid
@@ -766,7 +761,7 @@ void permutationsOf(int *route, int startIndex, int endIndex, int *collectionInd
  * @param stops Total stops count for the given route
  * @return 1 / true - if cityIndex is NOT in route
  */
-int memberOfRoute(int *route, int cityIndex, int stops) {
+int notMemberOfRoute(int *route, int cityIndex, int stops) {
   for (int i = 0; i < stops; i++) {
     if (route[i] == cityIndex + 1) {
       return 0;
@@ -812,7 +807,18 @@ void calculateShortestRoute(DistanceTable *distanceTable, int start) {
 
   Way shortest = shortestWay(possibleRoutesCount, allRouteLengths);
 
-  printRoute(distanceTable, allRoutes[shortest.index], shortest.length, distanceTable->n + 1);
+  int *finalRoute = malloc(((distanceTable->n) + 1) * sizeof(int));
+
+  finalRoute = allRoutes[shortest.index];
+
+  for (int i = 0; i < possibleRoutesCount; i++) {
+    free(allRoutes[i]);
+  }
+  free(allRoutes);
+
+  printRoute(distanceTable, finalRoute, shortest.length, distanceTable->n + 1);
+  
+  free(finalRoute);
 }
 
 /**
@@ -830,10 +836,10 @@ void guessShortestRoute(DistanceTable *distanceTable, int start) {
   for (int i = 1; i < distanceTable->n; i++) {
     int distance = 0, index = 0;
     for (int j = 0; j < distanceTable->n; j++) {
-      if ((distance == 0) && ((route[i - 1] - 1) != j) && (memberOfRoute(route, j, distanceTable->n)) && (getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist > 0)) {
+      if ((distance == 0) && ((route[i - 1] - 1) != j) && (notMemberOfRoute(route, j, distanceTable->n)) && (getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist > 0)) {
         distance = getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist;
         index = j;
-      } else if (((route[i - 1] - 1) != j) && (memberOfRoute(route, j, distanceTable->n)) && (getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist < distance) && (getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist > 0)) {
+      } else if (((route[i - 1] - 1) != j) && (notMemberOfRoute(route, j, distanceTable->n)) && (getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist < distance) && (getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist > 0)) {
         distance = getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist;
         index = j;
       }
@@ -847,6 +853,8 @@ void guessShortestRoute(DistanceTable *distanceTable, int start) {
   int length = addDistancesOfRoute(route, distanceTable->n + 1, distanceTable);
 
   printRoute(distanceTable, route, length, distanceTable->n + 1);
+
+  free(route);
 }
 
 /**
@@ -870,7 +878,9 @@ void shortestRouteInit(DistanceTable *distanceTable) {
   }
 
   //Auswahl: heuristischer oder exakter Ansatz
+  setConsoleColor(COLOR_DEFAULT);
   printf("Genaue Berechnung? (Y/n)\n");
+  setConsoleColor(COLOR_PRIMARY);
   int yesno = scanBoolean();
 
   //Festlegung Startpunkt->startCityNumber: startstadt
