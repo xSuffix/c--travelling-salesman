@@ -100,6 +100,8 @@ void calculateShortestRoute(DistanceTable *distanceTable, int start);
 
 void guessShortestRoute(DistanceTable *distanceTable, int start);
 
+int readCity(DistanceTable *distanceTable, char message[]);
+
 void shortestRouteInit(DistanceTable *distanceTable);
 
 int exitProgram(int *unsavedChanges);
@@ -536,57 +538,25 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable, int *unsavedChang
   }
 
   bool invalid;
-  char firstCity[100];
-  char secondCity[100];
   int firstCityNumber;
   int secondCityNumber;
 
-  // Get the city names from the user and check them.
-  do {
-    do {
-      invalid = false;
-      setConsoleColor(COLOR_DEFAULT);
-      printf("Bitte geben Sie den Namen der ersten Stadt ein:\n");
-      setConsoleColor(COLOR_PRIMARY);
-      scanf("%s", firstCity);
-
-      firstCityNumber = getCityNumber(distanceTable, firstCity);
-      if (firstCityNumber == -1) {
-        setConsoleColor(COLOR_ERROR);
-        printf("Diese Stadt konnte in der Entferungstabelle nicht gefunden werden.\n");
-        printf("Bitte versuchen Sie es erneut.\n\n");
-        invalid = true;
-      }
-    } while (invalid);
-
-    printf("\n");
-
-    do {
-      invalid = false;
-      setConsoleColor(COLOR_DEFAULT);
-      printf("Bitte geben Sie den Namen der zweiten Stadt ein:\n");
-      setConsoleColor(COLOR_PRIMARY);
-      scanf("%s", secondCity);
-
-      secondCityNumber = getCityNumber(distanceTable, secondCity);
-      if (secondCityNumber == -1) {
-        setConsoleColor(COLOR_ERROR);
-        printf("Diese Stadt konnte in der Entfernungstabelle nicht gefunden werden.\n");
-        printf("Bitte versuchen Sie es erneut.\n\n");
-        invalid = true;
-      }
-    } while (invalid);
-
+  do{
+    invalid = false;
+    firstCityNumber = readCity(distanceTable, "Bitte geben Sie den Namen der ersten Stadt ein:");
+    secondCityNumber = readCity(distanceTable, "Bitte geben Sie den Namen der zweiten Stadt ein:");
     if (firstCityNumber == secondCityNumber) {
       setConsoleColor(COLOR_ERROR);
       printf("Die Städte sind identisch. Bitte geben Sie verschiedene Städte an.\n\n");
       invalid = true;
     }
-
   } while (invalid);
 
-  printf("\n");
-
+  char firstCity[100];
+  char secondCity[100];
+  strcpy(firstCity, distanceTable->cities[firstCityNumber]);
+  strcpy(secondCity, distanceTable->cities[secondCityNumber]);
+  
   Distance *firstToSecond = getDistanceStructBetweenCities(distanceTable, firstCityNumber, secondCityNumber);
   Distance *secondToFirst = getDistanceStructBetweenCities(distanceTable, secondCityNumber, firstCityNumber);
   setConsoleColor(COLOR_DEFAULT);
@@ -857,6 +827,38 @@ void guessShortestRoute(DistanceTable *distanceTable, int start) {
   free(route);
 }
 
+// PROTOTYP
+/**
+ * 
+ * @brief Reads a city from the command line and returns its index in the DistanceTable
+ * 
+ * @param *distanceTable The loaded DistanceTable, for reference
+ * @param message[] The required prompt for the user's input
+ * 
+ * @return cityNumber - The index of the requested city
+ */
+int readCity(DistanceTable *distanceTable, char message[]) {
+  bool invalid;
+  char cityName[100];
+  int cityNumber;
+  do {
+    invalid = false;
+    setConsoleColor(COLOR_DEFAULT);
+    printf("%s\n", message);
+    setConsoleColor(COLOR_PRIMARY);
+    scanf("%s", cityName);
+    cityNumber = getCityNumber(distanceTable, cityName);
+    if (cityNumber == -1) {
+      setConsoleColor(COLOR_ERROR);
+      printf("Diese Stadt konnte in der Entfernungstabelle nicht gefunden werden.\n");
+      printf("Bitte versuchen Sie es erneut.\n\n");
+      invalid = true;
+    }
+  } while (invalid);
+  printf("\n");
+  return cityNumber;
+}
+
 /**
  * 
  * @brief Initializes the route calculation and calls the required function. 
@@ -882,30 +884,7 @@ void shortestRouteInit(DistanceTable *distanceTable) {
   printf("Genaue Berechnung? (Y/n)\n");
   setConsoleColor(COLOR_PRIMARY);
   int yesno = scanBoolean();
-
-  //Festlegung Startpunkt->startCityNumber: startstadt
-  bool invalid;
-  char startCity[100];
-  int startCityNumber;
-
-  do {
-    invalid = false;
-    setConsoleColor(COLOR_DEFAULT);
-    printf("Bitte geben Sie den Namen der Start-Stadt ein:\n");
-    setConsoleColor(COLOR_PRIMARY);
-    scanf("%s", startCity);
-
-    startCityNumber = getCityNumber(distanceTable, startCity);
-    if (startCityNumber == -1) {
-      setConsoleColor(COLOR_ERROR);
-      printf("Diese Stadt konnte in der Entfernungstabelle nicht gefunden werden.\n");
-      printf("Bitte versuchen Sie es erneut.\n\n");
-      invalid = true;
-    }
-  } while (invalid);
-
-  printf("\n");
-
+  int startCityNumber = readCity(distanceTable, "Bitte geben Sie den Namen der Start-Stadt ein:");
   //ausgewählter Berechnungsansatz
   if (yesno != 0)
     calculateShortestRoute(distanceTable, startCityNumber);
