@@ -769,11 +769,12 @@ void calculateShortestRoute(DistanceTable *distanceTable, int start) {
   Way shortest = shortestWay(possibleRoutesCount, allRouteLengths);
 
   printRoute(distanceTable, allRoutes[shortest.index], shortest.length, distanceTable->n + 1);
-  
+
   for (int i = 0; i < possibleRoutesCount; i++) {
     free(allRoutes[i]);
   }
   free(allRoutes);
+
   free(allRouteLengths);
 }
 
