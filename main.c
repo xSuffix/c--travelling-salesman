@@ -993,8 +993,10 @@ int main() {
       }
       break;
     }
+#ifdef _WIN32
     case -1:
       break;
+#endif
     default:
       setConsoleColor(COLOR_ERROR);
       printf("\"%c\" ist keine gültige Eingabe.\n", c);
