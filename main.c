@@ -541,7 +541,7 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable, int *unsavedChang
   char firstCity[100];
   char secondCity[100];
 
-  do{
+  do {
     invalid = false;
     firstCityNumber = readCity(distanceTable, "Bitte geben Sie den Namen der ersten Stadt ein:");
     secondCityNumber = readCity(distanceTable, "Bitte geben Sie den Namen der zweiten Stadt ein:");
