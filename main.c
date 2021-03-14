@@ -777,18 +777,13 @@ void calculateShortestRoute(DistanceTable *distanceTable, int start) {
 
   Way shortest = shortestWay(possibleRoutesCount, allRouteLengths);
 
-  int *finalRoute = malloc(((distanceTable->n) + 1) * sizeof(int));
-
-  finalRoute = allRoutes[shortest.index];
-
+  printRoute(distanceTable, allRoutes[shortest.index], shortest.length, distanceTable->n + 1);
+  
   for (int i = 0; i < possibleRoutesCount; i++) {
     free(allRoutes[i]);
   }
   free(allRoutes);
-
-  printRoute(distanceTable, finalRoute, shortest.length, distanceTable->n + 1);
-  
-  free(finalRoute);
+  free(allRouteLengths);
 }
 
 /**
