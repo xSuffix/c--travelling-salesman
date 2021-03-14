@@ -712,10 +712,11 @@ void swap(int *a, int *b) {
  */
 void permutationsOf(int *route, int startIndex, int endIndex, int *collectionIndex, int **routeCollection) {
   if (startIndex == endIndex) {
+    // If a new route is found, it is safed in the route collection
     for (int j = 0; j < endIndex + 2; j++) {
       routeCollection[*collectionIndex][j] = route[j];
     }
-    *collectionIndex += 1;
+    *collectionIndex += 1; // ensures that every route is written to another field
     return;
   }
   int i;
@@ -757,6 +758,7 @@ bool notMemberOfRoute(int *route, int cityIndex, int stops) {
  * @param start The index of the starting city for the route - no impact on resulting route
  */
 void calculateShortestRoute(DistanceTable *distanceTable, int start) {
+  // Calculate the number of possible different legal routes [X cities -> (X-1)! different routes]
   int possibleRoutesCount = 1;
   for (int i = 1; i < distanceTable->n; i++) {
     possibleRoutesCount *= i;
@@ -767,8 +769,8 @@ void calculateShortestRoute(DistanceTable *distanceTable, int start) {
     allRoutes[i] = malloc(((distanceTable->n) + 1) * sizeof(int));
   }
 
+  // Set up a first example route as a basis for the permutations
   allRoutes[0][0] = start, allRoutes[0][distanceTable->n] = start;
-
   for (int arrayIndex = 1, city = 0; arrayIndex < distanceTable->n; arrayIndex++, city++) {
     if (city != start) {
       allRoutes[0][arrayIndex] = city;
@@ -776,7 +778,7 @@ void calculateShortestRoute(DistanceTable *distanceTable, int start) {
       allRoutes[0][arrayIndex] = ++city;
   }
 
-  int permutationCollectionIndex = 0;
+  int permutationCollectionIndex = 0; // the external index
   permutationsOf(allRoutes[0], 1, distanceTable->n - 1, &permutationCollectionIndex, allRoutes);
 
   for (int i = 0; i < possibleRoutesCount; i++) {
@@ -806,10 +808,11 @@ void calculateShortestRoute(DistanceTable *distanceTable, int start) {
  * @param start The index of the starting city for the route, basically determines resulting route
  */
 void guessShortestRoute(DistanceTable *distanceTable, int start) {
-  int *route = malloc((distanceTable->n + 1) * sizeof(int));
+  int route[distanceTable->n + 1];
   route[0] = start + 1;
   route[distanceTable->n] = start + 1;
 
+  // Find nearest neighbor
   for (int i = 1; i < distanceTable->n; i++) {
     int distance = 0, index = 0;
     for (int j = 0; j < distanceTable->n; j++) {
@@ -883,13 +886,13 @@ void shortestRouteInit(DistanceTable *distanceTable) {
     return;
   }
 
-  // Auswahl: heuristischer oder exakter Ansatz
+  // Choice: heuristic or exact approach
   setConsoleColor(COLOR_DEFAULT);
   printf("Genaue Berechnung? (y/n)\n");
   setConsoleColor(COLOR_PRIMARY);
   int isExact = scanBoolean();
   int startCityNumber = readCity(distanceTable, "\nBitte geben Sie den Namen der Start-Stadt ein:");
-  // ausgewählter Berechnungsansatz
+  // Chosen approach
   if (isExact)
     calculateShortestRoute(distanceTable, startCityNumber);
   else
