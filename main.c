@@ -345,7 +345,7 @@ DistanceTable *loadData() {
 
     fclose(fpointer);
     setConsoleColor(COLOR_SUCCESS);
-    if(distanceTable->n == 0) {
+    if (distanceTable->n == 0) {
       setConsoleColor(COLOR_WARNING);
       printf("Die erste Zeile enthält keine Städtenamen, es wurde eine leere Entfernungstabelle geladen.\n");
       setConsoleColor(COLOR_DEFAULT);
