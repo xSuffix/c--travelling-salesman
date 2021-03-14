@@ -556,7 +556,7 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable, int *unsavedChang
   char secondCity[100];
   strcpy(firstCity, distanceTable->cities[firstCityNumber]);
   strcpy(secondCity, distanceTable->cities[secondCityNumber]);
-  
+
   Distance *firstToSecond = getDistanceStructBetweenCities(distanceTable, firstCityNumber, secondCityNumber);
   Distance *secondToFirst = getDistanceStructBetweenCities(distanceTable, secondCityNumber, firstCityNumber);
   setConsoleColor(COLOR_DEFAULT);
@@ -867,7 +867,7 @@ int readCity(DistanceTable *distanceTable, char message[]) {
  * @param *distanceTable The loaded DistanceTable, for reference
  */
 void shortestRouteInit(DistanceTable *distanceTable) {
-  if (distanceTable->n == 0) {
+  if (!distanceTable || distanceTable->n == 0) {
     setConsoleColor(COLOR_ERROR);
     printf("Bitte laden Sie zuerst eine Entfernungstabelle.\n");
     return;
