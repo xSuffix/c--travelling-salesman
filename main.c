@@ -404,7 +404,7 @@ int saveData(DistanceTable *distanceTable, int *unsavedChanges) {
   }
 
   setConsoleColor(COLOR_ERROR);
-  printf("Fehler: Bitte laden Sie zunächst eine Entfernungstabelle.\n");
+  printf("Bitte laden Sie zuerst eine Entfernungstabelle.\n");
   return 0;
 }
 
@@ -501,7 +501,6 @@ Distance *getDistanceStructBetweenCities(DistanceTable *distanceTable, int from,
 }
 
 /**
- * 
  * @brief This checks, if the entered distance is positive and fits into an Integer. 
  *        So the Long can be safely typecasted to an Int.
  * 
@@ -522,7 +521,6 @@ bool checkForInvalidDistance(long num) {
   return false;
 }
 
-// TODO: Handling for double values? Currently the decimal places are simply cut off.
 /**
  * @brief This function changes the distance between to cities. 
  *        The new distances are provided from the user.
@@ -540,6 +538,8 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable, int *unsavedChang
   bool invalid;
   int firstCityNumber;
   int secondCityNumber;
+  char firstCity[100];
+  char secondCity[100];
 
   do{
     invalid = false;
@@ -552,8 +552,6 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable, int *unsavedChang
     }
   } while (invalid);
 
-  char firstCity[100];
-  char secondCity[100];
   strcpy(firstCity, distanceTable->cities[firstCityNumber]);
   strcpy(secondCity, distanceTable->cities[secondCityNumber]);
 
@@ -622,7 +620,6 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable, int *unsavedChang
 }
 
 /**
- * 
  * @brief Sums up all distances between the stops of a route
  * 
  * @param *route The indices of the stops of the route  
@@ -641,7 +638,6 @@ int addDistancesOfRoute(int *route, int stops, DistanceTable *distanceTable) {
 }
 
 /**
- * 
  * @brief Prints the provided route and its length to the console
  * 
  * @param *distanceTable The loaded DistanceTable, for reference
@@ -664,7 +660,6 @@ void printRoute(DistanceTable *distanceTable, int *route, int routeLength, int s
 }
 
 /**
- * 
  * @brief Prints the provided route and its length to the console
  * 
  * @param *distances The array containing the total distance for each route
@@ -683,7 +678,6 @@ Way shortestWay(int stops, int *distances) {
 }
 
 /**
- * 
  * @brief Swaps to integer fields' values
  * 
  * @param *a The address of the first int
@@ -696,7 +690,6 @@ void swap(int *a, int *b) {
   *b = temp;
 }
 /**
- * 
  * @brief Recursive algorithm to create all permutations of a given section of an array and save them to a two-dimensional array
  * 
  * @param *route The given array: its permutations will be created
@@ -722,7 +715,6 @@ void permutationsOf(int *route, int startIndex, int endIndex, int *collectionInd
 }
 
 /**
- * 
  * @brief Checks, whether a given city is part of a given route. Here the city's index will be incremented to avoid
  * interactions between index 0 and 0 initializations. All indices in the array are 1 higher, so there is no index 0 any more.
  * 
@@ -741,7 +733,6 @@ int notMemberOfRoute(int *route, int cityIndex, int stops) {
 }
 
 /**
- * 
  * @brief Calculates and prints out the exact total distance of the shortest route using a permutation 
  * generator to find all possible fitting routes and compares those afterwards
  * 
@@ -787,7 +778,6 @@ void calculateShortestRoute(DistanceTable *distanceTable, int start) {
 }
 
 /**
- * 
  * @brief Heuristic way to estimate the shortest route, using the Nearest-Neighbor-Method
  * 
  * @param *distanceTable The loaded DistanceTable, for reference
@@ -824,7 +814,6 @@ void guessShortestRoute(DistanceTable *distanceTable, int start) {
 
 // PROTOTYP
 /**
- * 
  * @brief Reads a city from the command line and returns its index in the DistanceTable
  * 
  * @param *distanceTable The loaded DistanceTable, for reference
@@ -855,7 +844,6 @@ int readCity(DistanceTable *distanceTable, char message[]) {
 }
 
 /**
- * 
  * @brief Initializes the route calculation and calls the required function. 
  * Takes in the input for the starting city and the used way to find the route
  * 
@@ -874,14 +862,14 @@ void shortestRouteInit(DistanceTable *distanceTable) {
     return;
   }
 
-  //Auswahl: heuristischer oder exakter Ansatz
+  // Auswahl: heuristischer oder exakter Ansatz
   setConsoleColor(COLOR_DEFAULT);
-  printf("Genaue Berechnung? (Y/n)\n");
+  printf("Genaue Berechnung? (y/n)\n");
   setConsoleColor(COLOR_PRIMARY);
-  int yesno = scanBoolean();
-  int startCityNumber = readCity(distanceTable, "Bitte geben Sie den Namen der Start-Stadt ein:");
-  //ausgewählter Berechnungsansatz
-  if (yesno != 0)
+  int isExact = scanBoolean();
+  int startCityNumber = readCity(distanceTable, "\nBitte geben Sie den Namen der Start-Stadt ein:");
+  // ausgewählter Berechnungsansatz
+  if (isExact)
     calculateShortestRoute(distanceTable, startCityNumber);
   else
     guessShortestRoute(distanceTable, startCityNumber);
@@ -972,7 +960,6 @@ int main() {
       changeDistanceBetweenCities(distanceTable, &unsavedChanges);
       break;
     case 'e':
-      //calculateShortestRoute(distanceTable);
       shortestRouteInit(distanceTable);
       break;
     case 'f': {
