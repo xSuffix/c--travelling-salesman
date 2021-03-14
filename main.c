@@ -1,15 +1,10 @@
-// Kurs INF20A
-// Bearbeiter: Jan Fröhlich, Gabriel Nill, Fabian Weller
+/*
+Kurs INF20A, Programmieren I
+Programmierprojekt: Travelling Salesman
+Bearbeiter: Jan Fröhlich, Gabriel Nill, Fabian Weller
+*/
 
-//  TODO: Offene Fragen:
-//  - Soll die Datei, in die gespeichert und von der gelesen wird, immer mit .txt enden?
-//  TODO: Zusammenführung Stadt-Eingabe-Methoden (Wird in mindestens zwei Funktionen gemacht)
-//  TODO: (Gabriel) Bessere Lesbarkeit code, Reduktion Parameter
-//  TODO: Allokierungen prüfen -> free(xyz), wo noch nötig
-// [TODO: (Gabriel) Überarbeitung Routenkalkulation] * aber prinzipiell nicht notwendig *
-//  TODO: Testen!!
-
-#include <ctype.h> // iscntrl() isspace() tolower() Funktionen für ASCII-Zeichen
+#include <ctype.h> // isspace() tolower() Funktionen für ASCII-Zeichen
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>  // Ein- und Ausgabefunktionen
@@ -127,7 +122,7 @@ void setConsoleColor(int color) {
 /**
  * @brief Free memory of a DistanceTable.
  * 
- * @param distanceTable DistanceTable whose memory is to be freed.
+ * @param *distanceTable DistanceTable whose memory is to be freed.
  */
 void freeDistanceTable(DistanceTable *distanceTable) {
   if (distanceTable) {
@@ -162,7 +157,7 @@ int intDigits(int n) {
  * @brief   Get length of a string.
  * @details This function takes into account that unicode characters can consist of more than one byte.
  * 
- * @param s Any string to count the length of.
+ * @param *s Any string to count the length of.
  * @return  Length of string s.
  */
 int strlen_utf8(char *s) {
@@ -180,7 +175,7 @@ int strlen_utf8(char *s) {
  * @details If string length is smaller than min, fill the rest with the filler char. If it's larger than max, crop.
  *          This function takes into account that unicode characters can consist of more than one byte.
  * 
- * @param src     String which should be normed.
+ * @param *src    String which should be normed.
  * @param min     Minimum length of output string.
  * @param max     Maximum length of output string.
  * @param filler  Character to append if the string length is smaller than min.
@@ -350,7 +345,13 @@ DistanceTable *loadData() {
 
     fclose(fpointer);
     setConsoleColor(COLOR_SUCCESS);
-    printf("Die Entfernungstabelle wurde erfolgreich geladen! (%s)\n", path);
+    if(distanceTable->n == 0) {
+      setConsoleColor(COLOR_WARNING);
+      printf("Die erste Zeile enthält keine Städtenamen, es wurde eine leere Entfernungstabelle geladen.\n");
+      setConsoleColor(COLOR_DEFAULT);
+    } else {
+      printf("Die Entfernungstabelle wurde erfolgreich geladen! (%s)\n", path);
+    }
     free(path);
     free(line);
     return distanceTable;
@@ -360,8 +361,8 @@ DistanceTable *loadData() {
 /**
  * @brief Save DistanceTable to a file.
  * 
- * @param distanceTable  Pointer to DistanceTable which should be saved.
- * @param unsavedChanges Variable which keeps track of unsaved changes, will be set to 0 if saved sucessfully.
+ * @param *distanceTable  Pointer to DistanceTable which should be saved.
+ * @param *unsavedChanges Variable which keeps track of unsaved changes, will be set to 0 if saved sucessfully.
  * @return 1 if the file was saved, 0 if it was not.
  */
 int saveData(DistanceTable *distanceTable, int *unsavedChanges) {
@@ -410,10 +411,10 @@ int saveData(DistanceTable *distanceTable, int *unsavedChanges) {
 
 /**
  * @brief Prints DistanceTable * 
- * @param distanceTable DistanceTable which should be printed.
+ * @param *distanceTable DistanceTable which should be printed.
  */
 void showData(DistanceTable *distanceTable) {
-  if (distanceTable) {
+  if (distanceTable && distanceTable->n > 0) {
     int largestCityNameLength = 0;
 
     // Initialize length of column (in chars) with minimum value of 3
@@ -468,11 +469,11 @@ void showData(DistanceTable *distanceTable) {
 }
 
 /**
- * @brief Get the index of the city in the distanceTable (if it's in the distanceTable)
+ * @brief Get the index of the city in the DistanceTable (if it's in the distanceTable)
  * 
- * @param distanceTable 
- * @param city
- * @return int  Returns the index of the city in the distanceTable. Returns -1 if city was not found.
+ * @param *distanceTable  The loaded DistanceTable, for reference
+ * @param *city           The requested city's name
+ * @return Returns the index of the city in the distanceTable. Returns -1 if city was not found.
  */
 int getCityNumber(DistanceTable *distanceTable, char city[100]) {
   for (int i = 0; i < distanceTable->n; i++) {
@@ -486,10 +487,10 @@ int getCityNumber(DistanceTable *distanceTable, char city[100]) {
 /**
  * @brief Get the Pointer to the Distance Struct Between "from" and "to"
  * 
- * @param distanceTable 
- * @param from          The index of the city to go from
- * @param to            The index of the city to go to
- * @return Distance* 
+ * @param *distanceTable  The loaded DistanceTable, for reference
+ * @param from            The index of the city to go from
+ * @param to              The index of the city to go to
+ * @return A pointer to the requested Distance Struct 
  */
 Distance *getDistanceStructBetweenCities(DistanceTable *distanceTable, int from, int to) {
   for (int i = 0; i < distanceTable->n * distanceTable->n - 1; i++) {
@@ -505,8 +506,7 @@ Distance *getDistanceStructBetweenCities(DistanceTable *distanceTable, int from,
  *        So the Long can be safely typecasted to an Int.
  * 
  * @param num     Distance
- * @return true   The provided distance is invalid.
- * @return false  The provided distance is valid.
+ * @return true, if the provided distance is invalid
  */
 bool checkForInvalidDistance(long num) {
   if (num <= 0) {
@@ -522,16 +522,22 @@ bool checkForInvalidDistance(long num) {
 }
 
 /**
- * @brief This function changes the distance between to cities. 
- *        The new distances are provided from the user.
+ * @brief This function changes the distance between tqo cities. 
+ *        The new distances are provided by the user.
  * 
- * @param distanceTable 
- * @param unsavedChanges increments if a distance is changed
+ * @param *distanceTable The loaded DistanceTable, for reference
+ * @param *unsavedChanges Increments, if a distance is changed
  */
 void changeDistanceBetweenCities(DistanceTable *distanceTable, int *unsavedChanges) {
-  if (distanceTable == NULL) {
+  if (!distanceTable || distanceTable->n == 0) {
     setConsoleColor(COLOR_ERROR);
     printf("Bitte laden Sie zuerst eine Entfernungstabelle.\n");
+    return;
+  }
+  if (distanceTable->n == 1) {
+    setConsoleColor(COLOR_WARNING);
+    printf("Die Entfernungstabelle enthält nur eine Stadt, es ist keine Rundreise möglich.\n");
+    printf("Laden Sie eine neue Entfernungstabelle, um eine Route zu berechnen.\n");
     return;
   }
 
@@ -620,12 +626,12 @@ void changeDistanceBetweenCities(DistanceTable *distanceTable, int *unsavedChang
 }
 
 /**
- * @brief Sums up all distances between the stops of a route
+ * @brief Sums up all distances between the stops of a route.
  * 
  * @param *route The indices of the stops of the route  
  * @param stops The stop count of the provided route
  * @param *distanceTable The loaded DistanceTable, for reference
- * @return sum - The total distance of the route
+ * @return The total distance of the route
  */
 int addDistancesOfRoute(int *route, int stops, DistanceTable *distanceTable) {
   int sum = 0;
@@ -638,7 +644,7 @@ int addDistancesOfRoute(int *route, int stops, DistanceTable *distanceTable) {
 }
 
 /**
- * @brief Prints the provided route and its length to the console
+ * @brief Prints the provided route and its length to the console.
  * 
  * @param *distanceTable The loaded DistanceTable, for reference
  * @param *route The indices of the stops of the route 
@@ -653,6 +659,7 @@ void printRoute(DistanceTable *distanceTable, int *route, int routeLength, int s
     printf("%s - ", distanceTable->cities[route[j]]);
   }
   printf("%s\n", distanceTable->cities[route[stops - 1]]);
+
   setConsoleColor(COLOR_INFO);
   printf("Länge: ");
   setConsoleColor(COLOR_DEFAULT);
@@ -660,11 +667,11 @@ void printRoute(DistanceTable *distanceTable, int *route, int routeLength, int s
 }
 
 /**
- * @brief Prints the provided route and its length to the console
+ * @brief Finds and returns the shortest of all calculated routes.
  * 
  * @param *distances The array containing the total distance for each route
  * @param stops The stop count of the provided route
- * @return min - Way struct containing the shortest route and its length
+ * @return A way struct containing the shortest route and its length
  */
 Way shortestWay(int stops, int *distances) {
   Way min = {0, distances[0]};
@@ -678,7 +685,7 @@ Way shortestWay(int stops, int *distances) {
 }
 
 /**
- * @brief Swaps to integer fields' values
+ * @brief Swaps to integer fields' values.
  * 
  * @param *a The address of the first int
  * @param *b The address of the second int
@@ -689,14 +696,19 @@ void swap(int *a, int *b) {
   *a = *b;
   *b = temp;
 }
+
 /**
- * @brief Recursive algorithm to create all permutations of a given section of an array and save them to a two-dimensional array
+ * @brief Recursive algorithm to create all permutations of a given section of an array and save them to a two-dimensional array.
+ * 
+ * @details The index-counter is outside the function and incremented via the pointer only, when a new permutation is found.
+ *          This is required, as the algorithm creates the permutations with recursion and an in-function counter would lead 
+ *          to failure.
  * 
  * @param *route The given array: its permutations will be created
  * @param startIndex Starting index for the section to permutate
  * @param endIndex Ending index for the section to permutate
- * @param *collectionIndex Pointer to the index counting up the 2-dimensional array, as index is in calling method
- * @param **routeCollection The 2-dimensional array that is to be filled with permutations
+ * @param *collectionIndex Pointer to an external index counting up the 2-dimensional array to not conflict with recursion
+ * @param **routeCollection A 2-dimensional array that gets filled with permutations
  */
 void permutationsOf(int *route, int startIndex, int endIndex, int *collectionIndex, int **routeCollection) {
   if (startIndex == endIndex) {
@@ -715,13 +727,15 @@ void permutationsOf(int *route, int startIndex, int endIndex, int *collectionInd
 }
 
 /**
- * @brief Checks, whether a given city is part of a given route. Here the city's index will be incremented to avoid
- * interactions between index 0 and 0 initializations. All indices in the array are 1 higher, so there is no index 0 any more.
+ * @brief Checks, whether a given city is part of a given route. 
+ * 
+ * @details Here the city's index will be incremented to avoid interactions between index 0 and 0 initializations. 
+ *          All indices in the array are 1 higher, so there is no index 0 any more.
  * 
  * @param *route The given route with all of its current members' indices being increased by 1
  * @param cityIndex The index of the city to perform check on
  * @param stops Total stops count for the given route
- * @return 1 / true - if cityIndex is NOT in route
+ * @return 1 / true, if cityIndex is NOT in route
  */
 int notMemberOfRoute(int *route, int cityIndex, int stops) {
   for (int i = 0; i < stops; i++) {
@@ -733,8 +747,11 @@ int notMemberOfRoute(int *route, int cityIndex, int stops) {
 }
 
 /**
- * @brief Calculates and prints out the exact total distance of the shortest route using a permutation 
- * generator to find all possible fitting routes and compares those afterwards
+ * @brief Calculates and prints out the distance of the shortest route.
+ * 
+ * @details This function calculates the exact shortest route and its exact total distance by using a 
+ *          permutation generator to find and save all possible fitting routes. These routes are compared
+ *          afterwards and the shortest will be prompted to the user.
  * 
  * @param *distanceTable The loaded DistanceTable, for reference
  * @param start The index of the starting city for the route - no impact on resulting route
@@ -779,7 +796,11 @@ void calculateShortestRoute(DistanceTable *distanceTable, int start) {
 }
 
 /**
- * @brief Heuristic way to estimate the shortest route, using the Nearest-Neighbor-Method
+ * @brief Heuristic way to estimate the shortest route, using the Nearest-Neighbor-Method.
+ * 
+ * @details This method delivers a rough estimate for the shortest route. Its result won't be exactly right
+ *          most of the time, however this algorithm is faster than the exact one. The used algorithm is the
+ *          Nearest-Neighbor approach to always choose the nearest unvisited neighbor city.
  * 
  * @param *distanceTable The loaded DistanceTable, for reference
  * @param start The index of the starting city for the route, basically determines resulting route
@@ -803,7 +824,7 @@ void guessShortestRoute(DistanceTable *distanceTable, int start) {
     route[i] = index + 1;
   }
   for (int x = 0; x < distanceTable->n + 1; x++) {
-    route[x] -= 1;
+    route[x]--;
   }
 
   int length = addDistancesOfRoute(route, distanceTable->n + 1, distanceTable);
@@ -813,16 +834,15 @@ void guessShortestRoute(DistanceTable *distanceTable, int start) {
   free(route);
 }
 
-// PROTOTYP
 /**
- * @brief Reads a city from the command line and returns its index in the DistanceTable
+ * @brief Reads a city from the command line and returns its index in the DistanceTable.
  * 
  * @param *distanceTable The loaded DistanceTable, for reference
- * @param message[] The required prompt for the user's input
+ * @param *message The required prompt for the user's input
  * 
- * @return cityNumber - The index of the requested city
+ * @return The index of the requested city
  */
-int readCity(DistanceTable *distanceTable, char message[]) {
+int readCity(DistanceTable *distanceTable, char *message) {
   bool invalid;
   char cityName[100];
   int cityNumber;
@@ -845,8 +865,10 @@ int readCity(DistanceTable *distanceTable, char message[]) {
 }
 
 /**
- * @brief Initializes the route calculation and calls the required function. 
- * Takes in the input for the starting city and the used way to find the route
+ * @brief Route calculation initialization.
+ * 
+ * @details Initializes the route calculation and calls the required function. Takes in
+ *          the input for the starting city and the user's choice how to find the route.
  * 
  * @param *distanceTable The loaded DistanceTable, for reference
  */
