@@ -89,7 +89,7 @@ void swap(int *a, int *b);
 
 void permutationsOf(int *route, int startIndex, int endIndex, int *collectionIndex, int **routeCollection);
 
-int notMemberOfRoute(int *route, int cityIndex, int stops);
+bool notMemberOfRoute(int *route, int cityIndex, int stops);
 
 void calculateShortestRoute(DistanceTable *distanceTable, int start);
 
@@ -737,13 +737,13 @@ void permutationsOf(int *route, int startIndex, int endIndex, int *collectionInd
  * @param stops Total stops count for the given route
  * @return 1 / true, if cityIndex is NOT in route
  */
-int notMemberOfRoute(int *route, int cityIndex, int stops) {
+bool notMemberOfRoute(int *route, int cityIndex, int stops) {
   for (int i = 0; i < stops; i++) {
     if (route[i] == cityIndex + 1) {
-      return 0;
+      return false;
     }
   }
-  return 1;
+  return true;
 }
 
 /**
@@ -813,10 +813,10 @@ void guessShortestRoute(DistanceTable *distanceTable, int start) {
   for (int i = 1; i < distanceTable->n; i++) {
     int distance = 0, index = 0;
     for (int j = 0; j < distanceTable->n; j++) {
-      if ((distance == 0) && ((route[i - 1] - 1) != j) && (notMemberOfRoute(route, j, distanceTable->n)) && (getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist > 0)) {
+      if ((j!=start)&&(distance == 0) && ((route[i - 1] - 1) != j) && (notMemberOfRoute(route, j, distanceTable->n)) && (getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist > 0)) {
         distance = getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist;
         index = j;
-      } else if (((route[i - 1] - 1) != j) && (notMemberOfRoute(route, j, distanceTable->n)) && (getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist < distance) && (getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist > 0)) {
+      } else if ((j!=start)&&((route[i - 1] - 1) != j) && (notMemberOfRoute(route, j, distanceTable->n)) && (getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist < distance) && (getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist > 0)) {
         distance = getDistanceStructBetweenCities(distanceTable, route[i - 1] - 1, j)->dist;
         index = j;
       }
@@ -830,8 +830,6 @@ void guessShortestRoute(DistanceTable *distanceTable, int start) {
   int length = addDistancesOfRoute(route, distanceTable->n + 1, distanceTable);
 
   printRoute(distanceTable, route, length, distanceTable->n + 1);
-
-  free(route);
 }
 
 /**
