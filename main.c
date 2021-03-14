@@ -865,7 +865,7 @@ void guessShortestRoute(DistanceTable *distanceTable, int start) {
  * @param *distanceTable The loaded DistanceTable, for reference
  */
 void shortestRouteInit(DistanceTable *distanceTable) {
-  if (distanceTable->n == 0) {
+  if (!distanceTable || distanceTable->n == 0) {
     setConsoleColor(COLOR_ERROR);
     printf("Bitte laden Sie zuerst eine Entfernungstabelle.\n");
     return;
