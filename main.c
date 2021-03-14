@@ -817,7 +817,7 @@ void calculateShortestRoute(DistanceTable *distanceTable, int start) {
   free(allRoutes);
 
   printRoute(distanceTable, finalRoute, shortest.length, distanceTable->n + 1);
-  
+
   free(finalRoute);
 }
 
