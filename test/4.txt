@@ -1,0 +1,5 @@
+Berlin Hamburg Muenchen Koeln 
+0 286 585 574 
+282 0 778 425 
+584 778 0 574 
+573 425 574 0 

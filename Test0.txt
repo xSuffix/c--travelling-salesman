@@ -1,4 +1,0 @@
-Berlin Hamburg München 
-0 150 750 
-150 0 800 
-740 780 0 
