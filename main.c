@@ -431,7 +431,7 @@ void showData(DistanceTable *distanceTable) {
 
       for (int j = 0; j < distanceTable->n; j++) {
         // Find out how many digits the largest distance has
-        int distanceLength = intDigits(distanceTable->distances[i * 5 + j].dist);
+        int distanceLength = intDigits(distanceTable->distances[i * distanceTable->n + j].dist);
         if (distanceLength > columnLengths[j])
           columnLengths[j] = distanceLength;
       }
